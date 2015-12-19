@@ -1,8 +1,10 @@
 #include "half.h"
 #include <dlfcn.h>
 #include "/usr/discreet/presets/2016/sparks/spark.h"
+#include "openfx/include/ofxCore.h"
 
 void *dlhandle;
+int (*dlfunc)(void);
 
 int bufferReady(int n, SparkMemBufStruct *b) {
 	if(!sparkMemGetBuffer(n, b)) {
@@ -19,7 +21,16 @@ int bufferReady(int n, SparkMemBufStruct *b) {
 unsigned int SparkInitialise(SparkInfoStruct si) {
 	dlhandle = dlopen("/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx", RTLD_LAZY);
 	if(dlhandle == NULL) {
-		printf("Ofxwrap: dlopen() failed");
+		printf("Ofxwrap: dlopen() failed\n");
+		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
+	}
+	dlfunc = (int(*)()) dlsym(dlhandle, "OfxGetNumberOfPlugins");
+	if(dlfunc == NULL) {
+		printf("Ofxwrap: dlsym() failed\n");
+		sparkError("Ofxwrap: failed to find plugin entry function!\n");
+	} else {
+		int numplugs = (*dlfunc)();
+		printf("Ofxwrap: found %d plugins\n", numplugs);
 	}
 	return(SPARK_MODULE);
 }
