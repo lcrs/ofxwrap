@@ -13,6 +13,7 @@ OfxStatus dialogs_NotifyRedrawPending(void) {
 OfxDialogSuiteV1 dialogs;
 
 void dialogs_init(void) {
+	printf("Ofxwrap dialogs: in dialogs_init()\n");
 	dialogs.RequestDialog = dialogs_RequestDialog;
 	dialogs.NotifyRedrawPending = dialogs_NotifyRedrawPending;
 }

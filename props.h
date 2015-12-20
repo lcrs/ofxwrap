@@ -85,6 +85,7 @@ OfxStatus props_GetDimension(OfxPropertySetHandle properties, const char *proper
 OfxPropertySuiteV1 props;
 
 void props_init(void) {
+	printf("Ofxwrap props: in props_init()\n");
 	props.propSetPointer = props_SetPointer;
 	props.propSetString = props_SetString;
 	props.propSetDouble = props_SetDouble;
