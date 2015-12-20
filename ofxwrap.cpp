@@ -2,12 +2,17 @@
 #include <dlfcn.h>
 #include "/usr/discreet/presets/2016/sparks/spark.h"
 #include "openfx/include/ofxCore.h"
+#include "props.h"
 
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropset = NULL;
 
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
+	if(strcmp(suite, kOfxPropertySuite) == 0) {
+		props_init();
+		return (const void *)&props;
+	}
 	return NULL;
 }
 
@@ -30,7 +35,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	if(dlhandle == NULL) {
 		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
 	}
-	
+
 	int (*OfxGetNumberOfPlugins)(void);
 	OfxGetNumberOfPlugins = (int(*)(void)) dlsym(dlhandle, "OfxGetNumberOfPlugins");
 	if(OfxGetNumberOfPlugins == NULL) {
@@ -38,7 +43,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	}
 	int numplugs = (*OfxGetNumberOfPlugins)();
 	printf("Ofxwrap: found %d plugins\n", numplugs);
-	
+
 	OfxPlugin *(*OfxGetPlugin)(int nth);
 	OfxGetPlugin = (OfxPlugin*(*)(int nth)) dlsym(dlhandle, "OfxGetPlugin");
 	if(OfxGetPlugin == NULL) {
