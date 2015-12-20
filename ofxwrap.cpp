@@ -4,6 +4,7 @@
 #include "openfx/include/ofxCore.h"
 #include "props.h"
 #include "dialogs.h"
+#include "ifxs.h"
 
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropset = NULL;
@@ -16,6 +17,9 @@ const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version
 	} else if(strcmp(suite, kOfxDialogSuite) == 0) {
 		dialogs_init();
 		return (const void *)&dialogs;
+	} else if(strcmp(suite, kOfxDialogSuite) == 0) {
+		ifxs_init();
+		return (const void *)&ifxs;
 	}
 	return NULL;
 }
