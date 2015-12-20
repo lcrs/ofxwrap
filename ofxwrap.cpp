@@ -3,6 +3,7 @@
 #include "/usr/discreet/presets/2016/sparks/spark.h"
 #include "openfx/include/ofxCore.h"
 #include "props.h"
+#include "dialogs.h"
 
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropset = NULL;
@@ -12,6 +13,9 @@ const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
 		props_init();
 		return (const void *)&props;
+	} else if(strcmp(suite, kOfxDialogSuite) == 0) {
+		dialogs_init();
+		return (const void *)&dialogs;
 	}
 	return NULL;
 }
