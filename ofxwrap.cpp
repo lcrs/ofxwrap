@@ -3,13 +3,13 @@
 #include "/usr/discreet/presets/2016/sparks/spark.h"
 #include "openfx/include/ofxCore.h"
 
-int bufferReady(int n, SparkMemBufStruct *b) {
-	if(!sparkMemGetBuffer(n, b)) {
-		printf("Ofxwrap: Failed to get buffer %d\n", n);
+int bufferReady(int id, SparkMemBufStruct *b) {
+	if(!sparkMemGetBuffer(id, b)) {
+		printf("Ofxwrap: Failed to get buffer %d\n", id);
 		return 0;
 	}
 	if(!(b->BufState & MEMBUF_LOCKED)) {
-		printf("Ofxwrap: Failed to lock buffer %d\n", n);
+		printf("Ofxwrap: Failed to lock buffer %d\n", id);
 		return 0;
 	}
 	return 1;
@@ -17,20 +17,22 @@ int bufferReady(int n, SparkMemBufStruct *b) {
 
 unsigned int SparkInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkInitialise(), name is %s\n", si.Name);
+
 	void *dlhandle = dlopen("/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx", RTLD_LAZY);
 	if(dlhandle == NULL) {
 		printf("Ofxwrap: dlopen() failed\n");
 		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
 	}
+	
 	int (*dlfunc)(void);
 	dlfunc = (int(*)(void)) dlsym(dlhandle, "OfxGetNumberOfPlugins");
 	if(dlfunc == NULL) {
 		printf("Ofxwrap: dlsym() failed\n");
 		sparkError("Ofxwrap: failed to find plugin entry function!\n");
-	} else {
-		int numplugs = (*dlfunc)();
-		printf("Ofxwrap: found %d plugins\n", numplugs);
 	}
+	int numplugs = (*dlfunc)();
+	printf("Ofxwrap: found %d plugins\n", numplugs);
+	
 	return(SPARK_MODULE);
 }
 
@@ -64,7 +66,6 @@ int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
 
 void SparkEvent(SparkModuleEvent e) {
 	printf("Ofxwrap: in SparkEvent(), event is %d, last setup name is %s\n", (int)e, sparkGetLastSetupName());
-	;
 }
 
 void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
