@@ -41,7 +41,7 @@ int bufferReady(int id, SparkMemBufStruct *b) {
 }
 
 unsigned int SparkInitialise(SparkInfoStruct si) {
-	printf("Ofxwrap: in SparkInitialise(), name is %s\n", si.Name);
+	printf("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
 
 	void *dlhandle = dlopen("/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx", RTLD_LAZY);
 	if(dlhandle == NULL) {
@@ -119,7 +119,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: describeincontext action: returned %d\n", s);
 	}
 
-	s = plugin->mainEntry(kOfxActionCreateInstance, imageeffect, (OfxPropertySetHandle) 0x1234, (OfxPropertySetHandle) 0x5678);
+	s = plugin->mainEntry(kOfxActionCreateInstance, instancehandle, NULL, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: create action: ok\n");
@@ -154,7 +154,7 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 }
 
 void SparkUnInitialise(SparkInfoStruct si) {
-	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n\n\n", si.Name);
+	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 }
 
 void SparkMemoryTempBuffers(void) {

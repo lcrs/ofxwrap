@@ -7,6 +7,10 @@ OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) hostpropset;
 const char *imageeffect = "imageeffect";
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) imageeffect;
 
+const char *instance = "instance";
+OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) instance;
+
+
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
 	printf("Ofxwrap: in props_SetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
@@ -52,7 +56,7 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
-			*value = (char *) "Dustbuster";
+			*value = (char *) "fr.inria.Natron";
 		}
 	}
 	if(strcmp((char *)properties, "describeincontextprops") == 0) {

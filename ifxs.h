@@ -3,7 +3,7 @@
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
 	printf("Ofxwrap: in ifxs_getPropertySet(), effect handle is %p, prop handle is %p\n", imageEffect, propHandle);
   if(imageEffect == imageeffecthandle) {
-    printf("Ofxwrap: in ifxs_getPropertySet(), effect handle is the one passed thru the describe action\n");
+    printf("Ofxwrap: in ifxs_getPropertySet(), (above effect handle is the one passed thru the describe action)\n");
   }
 	return kOfxStatOK;
 }
