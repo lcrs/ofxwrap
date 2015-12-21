@@ -7,9 +7,6 @@
 #include "ifxs.h"
 #include "parms.h"
 
-OfxPlugin *plugin = NULL;
-OfxPropertySetHandle hostpropset = (OfxPropertySetStruct *) HOSTPROPSETMAGIC;
-
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
@@ -64,6 +61,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	if(OfxGetPlugin == NULL) {
 		sparkError("Ofxwrap: failed to find plugin's OfxGetPlugin symbol!\n");
 	}
+	OfxPlugin *plugin = NULL;
 	plugin = (*OfxGetPlugin)(0);
 	if(plugin == NULL) {
 		sparkError("Ofxwrap: failed to get first plugin!\n");
@@ -71,16 +69,13 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: plugin id is %s\n", plugin->pluginIdentifier);
 
 	OfxHost h;
-	h.host = hostpropset;
+	h.host = hostpropsethandle;
 	h.fetchSuite = &fetchSuite;
 	plugin->setHost(&h);
 	OfxStatus s = plugin->mainEntry(kOfxActionLoad, NULL, NULL, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: load action: ok\n");
-			break;
-		case kOfxStatReplyDefault:
-			printf("Ofxwrap: load action: ignored!\n");
 			break;
 		case kOfxStatFailed:
 			sparkError("Ofxwrap: load action: failed!");
@@ -90,6 +85,53 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			sparkError("Ofxwrap: load action: missing feature!");
 		default:
 			printf("Ofxwrap: load action: returned %d\n", s);
+	}
+
+	s = plugin->mainEntry(kOfxActionDescribe, imageeffect, NULL, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: describe action: ok\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: describe action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: describe action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: describe action: missing feature!");
+		default:
+			printf("Ofxwrap: describe action: returned %d\n", s);
+	}
+
+	const char *inprops = "describeincontextprops";
+	OfxPropertySetHandle inpropshandle = (OfxPropertySetHandle) inprops;
+	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffect, inpropshandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: describeincontext action: ok\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: describeincontext action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: describeincontext action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: describeincontext action: missing feature!");
+		default:
+			printf("Ofxwrap: describeincontext action: returned %d\n", s);
+	}
+
+	s = plugin->mainEntry(kOfxActionCreateInstance, imageeffect, (OfxPropertySetHandle) 0x1234, (OfxPropertySetHandle) 0x5678);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: create action: ok\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: create action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: create action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: create action: missing feature!");
+		default:
+			printf("Ofxwrap: create action: returned %d\n", s);
 	}
 
 	return(SPARK_MODULE);
@@ -105,11 +147,14 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	SparkMemBufStruct result, front;
 	if(!bufferReady(1, &result)) return(NULL);
 	if(!bufferReady(2, &front)) return(NULL);
+
+	// kOfxImageEffectActionRender
+
 	return NULL;
 }
 
 void SparkUnInitialise(SparkInfoStruct si) {
-	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
+	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n\n\n", si.Name);
 }
 
 void SparkMemoryTempBuffers(void) {

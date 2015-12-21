@@ -1,6 +1,11 @@
 #include "openfx/include/ofxProperty.h"
 #include "openfx/include/ofxImageEffect.h"
-#define HOSTPROPSETMAGIC 0x123456789
+
+const char *hostpropset = "hostpropset";
+OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) hostpropset;
+
+const char *imageeffect = "imageeffect";
+OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) imageeffect;
 
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
@@ -45,12 +50,18 @@ OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property
 }
 OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property, int index, char **value) {
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
-	if(properties == (OfxPropertySetStruct *) HOSTPROPSETMAGIC) {
+	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
-			const char *hostname = "fr.inria.Natron";
-			*value = (char *) hostname;
+			*value = (char *) "Dustbuster";
 		}
 	}
+	if(strcmp((char *)properties, "describeincontextprops") == 0) {
+		if(strcmp(property, kOfxImageEffectPropContext) == 0) {
+			*value = (char *) kOfxImageEffectContextFilter;
+			printf("Ofxwrap: in props_GetString(), returned filter context\n");
+		}
+	}
+
 	return kOfxStatOK;
 }
 OfxStatus props_GetDouble(OfxPropertySetHandle properties, const char *property, int index, double *value) {
@@ -59,7 +70,7 @@ OfxStatus props_GetDouble(OfxPropertySetHandle properties, const char *property,
 }
 OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, int index, int *value) {
 	printf("Ofxwrap: in props_GetInt(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
-	if(properties == (OfxPropertySetStruct *) HOSTPROPSETMAGIC) {
+	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxImageEffectPropTemporalClipAccess) == 0) {
 			*value = 1;
 		}
@@ -82,7 +93,7 @@ OfxStatus props_GetDoubleN(OfxPropertySetHandle properties, const char *property
 }
 OfxStatus props_GetIntN(OfxPropertySetHandle properties, const char *property, int count, int *value) {
 	printf("Ofxwrap: in props_GetIntN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
-	if(properties == (OfxPropertySetStruct *) HOSTPROPSETMAGIC) {
+	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropVersion) == 0) {
 			*value = 1;
 		}
