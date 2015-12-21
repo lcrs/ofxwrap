@@ -1,4 +1,5 @@
 #include "openfx/include/ofxProperty.h"
+#include "openfx/include/ofxImageEffect.h"
 #define HOSTPROPSETMAGIC 0x123456789
 
 // Setters
@@ -58,6 +59,11 @@ OfxStatus props_GetDouble(OfxPropertySetHandle properties, const char *property,
 }
 OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, int index, int *value) {
 	printf("Ofxwrap: in props_GetInt(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
+	if(properties == (OfxPropertySetStruct *) HOSTPROPSETMAGIC) {
+		if(strcmp(property, kOfxImageEffectPropTemporalClipAccess) == 0) {
+			*value = 1;
+		}
+	}
 	return kOfxStatOK;
 }
 
