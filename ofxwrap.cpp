@@ -8,7 +8,7 @@
 #include "parms.h"
 
 OfxPlugin *plugin = NULL;
-OfxPropertySetHandle hostpropset = (OfxPropertySetStruct *) 0x1234;
+OfxPropertySetHandle hostpropset = (OfxPropertySetStruct *) HOSTPROPSETMAGIC;
 
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
