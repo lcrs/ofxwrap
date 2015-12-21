@@ -5,21 +5,28 @@
 #include "props.h"
 #include "dialogs.h"
 #include "ifxs.h"
+#include "parms.h"
 
 OfxPlugin *plugin = NULL;
-OfxPropertySetHandle hostpropset = NULL;
+OfxPropertySetHandle hostpropset = (OfxPropertySetStruct *) 0x1234;
 
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
 		props_init();
 		return (const void *)&props;
-	} else if(strcmp(suite, kOfxDialogSuite) == 0) {
+	}
+	if(strcmp(suite, kOfxDialogSuite) == 0) {
 		dialogs_init();
 		return (const void *)&dialogs;
-	} else if(strcmp(suite, kOfxDialogSuite) == 0) {
+	}
+	if(strcmp(suite, kOfxImageEffectSuite) == 0) {
 		ifxs_init();
 		return (const void *)&ifxs;
+	}
+	if(strcmp(suite, kOfxParameterSuite) == 0) {
+		parms_init();
+		return (const void *)&parms;
 	}
 	return NULL;
 }
@@ -70,19 +77,19 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	OfxStatus s = plugin->mainEntry(kOfxActionLoad, NULL, NULL, NULL);
 	switch(s) {
 		case kOfxStatOK:
-			printf("Ofxwrap: load action ok\n");
+			printf("Ofxwrap: load action: ok\n");
 			break;
 		case kOfxStatReplyDefault:
-			printf("Ofxwrap: load action ignored!\n");
+			printf("Ofxwrap: load action: ignored!\n");
 			break;
 		case kOfxStatFailed:
-			sparkError("Ofxwrap: load action failed!");
+			sparkError("Ofxwrap: load action: failed!");
 		case kOfxStatErrFatal:
-			sparkError("Ofxwrap: load action fatal error!");
+			sparkError("Ofxwrap: load action: fatal error!");
 		case kOfxStatErrMissingHostFeature:
-			sparkError("Ofxwrap: load action missing feature!");
+			sparkError("Ofxwrap: load action: missing feature!");
 		default:
-			printf("Ofxwrap: load action returned %d\n", s);
+			printf("Ofxwrap: load action: returned %d\n", s);
 	}
 
 	return(SPARK_MODULE);
