@@ -1,5 +1,6 @@
 #include "half.h"
 #include <dlfcn.h>
+#include <unistd.h>
 #include "/usr/discreet/presets/2016/sparks/spark.h"
 #include "openfx/include/ofxCore.h"
 #include "props.h"
@@ -119,7 +120,11 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: describeincontext action: returned %d\n", s);
 	}
 
+	// Crashes inside the plugin binary unless we do this :( Looks like it could looking for
+	// a user prefs folder and getting confused by the Flame process's real/effective uid mismatch
+	setuid(0);
 	s = plugin->mainEntry(kOfxActionCreateInstance, instancehandle, NULL, NULL);
+	setuid(getuid());
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: create action: ok\n");
