@@ -61,6 +61,9 @@ OfxStatus props_SetIntN(OfxPropertySetHandle properties, const char *property, i
 OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property, int index, void **value) {
 	printf("Ofxwrap: in props_GetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(property == kOfxPropInstanceData) {
+		if(instancedata == NULL) {
+			printf("Ofxwrap: in props_GetPointer(), asked for instance data but it is null!\n");
+		}
 		*value = instancedata;
 	}
 	return kOfxStatOK;
