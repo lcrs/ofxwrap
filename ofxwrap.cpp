@@ -8,6 +8,8 @@
 #include "ifxs.h"
 #include "parms.h"
 
+OfxPlugin *plugin = NULL;
+
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
@@ -62,7 +64,6 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	if(OfxGetPlugin == NULL) {
 		sparkError("Ofxwrap: failed to find plugin's OfxGetPlugin symbol!\n");
 	}
-	OfxPlugin *plugin = NULL;
 	plugin = (*OfxGetPlugin)(0);
 	if(plugin == NULL) {
 		sparkError("Ofxwrap: failed to get first plugin!\n");
@@ -121,7 +122,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	}
 
 	// Crashes inside the plugin binary unless we do this :( Looks like it could looking for
-	// a user prefs folder and getting confused by the Flame process's real/effective uid mismatch
+	// a user prefs folder and getting confused by Flame real/effective uid mismatch
 	setuid(0);
 	s = plugin->mainEntry(kOfxActionCreateInstance, instancehandle, NULL, NULL);
 	setuid(getuid());
@@ -139,6 +140,24 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: create action: returned %d\n", s);
 	}
 
+	s = plugin->mainEntry(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: clip prefs action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: clip prefs action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: clip prefs action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: clip prefs action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: clip prefs action: missing feature!");
+		default:
+			printf("Ofxwrap: clip prefs action: returned %d\n", s);
+	}
+
 	return(SPARK_MODULE);
 }
 
@@ -153,7 +172,59 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	if(!bufferReady(1, &result)) return(NULL);
 	if(!bufferReady(2, &front)) return(NULL);
 
-	// kOfxImageEffectActionRender
+	OfxStatus s = plugin->mainEntry(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: begin seq action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: begin seq action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: begin seq action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: begin seq action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: begin seq action: missing feature!");
+		default:
+			printf("Ofxwrap: begin seq action: returned %d\n", s);
+	}
+
+	s = plugin->mainEntry(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: render action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: render action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: render action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: render action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: render action: missing feature!");
+		default:
+			printf("Ofxwrap: render action: returned %d\n", s);
+	}
+
+	s = plugin->mainEntry(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: end seq action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: end seq action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: end seq action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: end seq action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: end seq action: missing feature!");
+		default:
+			printf("Ofxwrap: end seq action: returned %d\n", s);
+	}
 
 	return NULL;
 }

@@ -5,6 +5,9 @@ OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHa
   if(imageEffect == imageeffecthandle) {
     printf("Ofxwrap: in ifxs_getPropertySet(), (above effect handle is the one passed thru the describe action)\n");
   }
+  if(imageEffect == instancehandle) {
+    printf("Ofxwrap: in ifxs_getPropertySet(), above effect handle is the instance\n");
+  }
 	return kOfxStatOK;
 }
 OfxStatus ifxs_getParamSet(OfxImageEffectHandle imageEffect, OfxParamSetHandle *paramSet) {

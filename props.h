@@ -10,10 +10,20 @@ OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) imageeffect;
 const char *instance = "instance";
 OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) instance;
 
+const char *beginseqpropset = "beginseq";
+OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) beginseqpropset;
+
+const char *renderpropset = "render";
+OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) renderpropset;
+
+void *instancedata = NULL;
 
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
 	printf("Ofxwrap: in props_SetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
+	if(property == kOfxPropInstanceData) {
+		instancedata = value;
+	}
 	return kOfxStatOK;
 }
 OfxStatus props_SetString(OfxPropertySetHandle properties, const char *property, int index, const char *value) {
@@ -50,13 +60,16 @@ OfxStatus props_SetIntN(OfxPropertySetHandle properties, const char *property, i
 // Getters
 OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property, int index, void **value) {
 	printf("Ofxwrap: in props_GetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
+	if(property == kOfxPropInstanceData) {
+		*value = instancedata;
+	}
 	return kOfxStatOK;
 }
 OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property, int index, char **value) {
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
-			*value = (char *) "fr.inria.Natron";
+			*value = (char *) "Dustbuster";
 		}
 	}
 	if(strcmp((char *)properties, "describeincontextprops") == 0) {
