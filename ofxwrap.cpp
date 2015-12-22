@@ -93,6 +93,9 @@ int main(int argc, char ** argv) {
 			printf("Ofxwrap: describe action: returned %d\n", s);
 	}
 
+	// Crashes inside the plugin binary unless we do this :( Looks like it could looking for
+	// a user prefs folder and getting confused by Flame real/effective uid mismatch
+	setuid(0);
 	const char *inprops = "describeincontextprops";
 	OfxPropertySetHandle inpropshandle = (OfxPropertySetHandle) inprops;
 	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffect, inpropshandle, NULL);
@@ -110,11 +113,7 @@ int main(int argc, char ** argv) {
 			printf("Ofxwrap: describeincontext action: returned %d\n", s);
 	}
 
-	// Crashes inside the plugin binary unless we do this :( Looks like it could looking for
-	// a user prefs folder and getting confused by Flame real/effective uid mismatch
-	setuid(0);
 	s = plugin->mainEntry(kOfxActionCreateInstance, instancehandle, NULL, NULL);
-	setuid(getuid());
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: create action: ok\n");
@@ -147,13 +146,9 @@ int main(int argc, char ** argv) {
 			printf("Ofxwrap: clip prefs action: returned %d\n", s);
 	}
 
-	return 0;
-}
-
-signed long *SparkProcess(void) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", "not");
 
-	OfxStatus s = plugin->mainEntry(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
+	s = plugin->mainEntry(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: begin seq action: ok\n");
@@ -207,5 +202,5 @@ signed long *SparkProcess(void) {
 			printf("Ofxwrap: end seq action: returned %d\n", s);
 	}
 
-	return NULL;
+	return 0;
 }
