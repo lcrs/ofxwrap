@@ -50,8 +50,8 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 			*imageHandle = currentframeimagehandle;
 			printf("frame is next, returning current handle for now! %p\n", *imageHandle);
 		} else {
-			*imageHandle = NULL;
-			printf("frame is not current/previous/next, returning null!\n");
+			*imageHandle = currentframeimagehandle;
+			printf("frame is not current/previous/next, returning current for now!\n");
 		}
 	}
 	if(clip == outputcliphandle) {

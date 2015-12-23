@@ -64,17 +64,38 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
 			*value = (char *) "Dustbuster";
+			return kOfxStatOK;
 		}
 	}
-	if(strcmp((char *)properties, "describeincontextprops") == 0) {
-		if(strcmp(property, kOfxImageEffectPropContext) == 0) {
-			*value = (char *) kOfxImageEffectContextFilter;
-			printf("Ofxwrap: in props_GetString(), returned filter context\n");
-		}
+	if(strcmp(property, kOfxImageClipPropFieldOrder) == 0) {
+		*value = (char *) kOfxImageFieldNone;
+		printf("Ofxwrap: in props_GetString(), asked for field order, returned %s\n", *value);
+		return kOfxStatOK;
 	}
 	if(strcmp(property, kOfxImageEffectPropPixelDepth) == 0) {
 		*value = (char *) kOfxBitDepthFloat;
 		printf("Ofxwrap: in props_GetString(), asked for pixel depth, returned %s\n", *value);
+		return kOfxStatOK;
+	}
+	if(strcmp((char *)properties, "describeincontextprops") == 0) {
+		if(strcmp(property, kOfxImageEffectPropContext) == 0) {
+			*value = (char *) kOfxImageEffectContextFilter;
+			printf("Ofxwrap: in props_GetString(), returned %s\n", *value);
+		}
+	}
+	if(strcmp((char *)properties, "begininstancechangeprops") == 0 || strcmp((char *)properties, "instancechangeprops") == 0 || strcmp((char *)properties, "endinstancechangeprops") == 0) {
+		if(strcmp(property, kOfxPropChangeReason) == 0) {
+			*value = (char *) kOfxChangeUserEdited;
+			printf("Ofxwrap: in props_GetString(), asked for change reason, returned %s\n", *value);
+		}
+		if(strcmp(property, kOfxPropType) == 0) {
+			*value = (char *) kOfxTypeParameter;
+			printf("Ofxwrap: in props_GetString(), asked for change prop type, returned %s\n", *value);
+		}
+		if(strcmp(property, kOfxPropName) == 0) {
+			*value = (char *) "Prepare Profile...";
+			printf("Ofxwrap: in props_GetString(), asked for change prop name, returned %s\n", *value);
+		}
 	}
 	return kOfxStatOK;
 }
@@ -119,6 +140,11 @@ OfxStatus props_GetStringN(OfxPropertySetHandle properties, const char *property
 }
 OfxStatus props_GetDoubleN(OfxPropertySetHandle properties, const char *property, int count, double *value) {
 	printf("Ofxwrap: in props_GetDoubleN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
+	if(strcmp(property, kOfxImageEffectPropFrameRange) == 0) {
+		value[0] = 0.0;
+		value[1] = 1000.0;
+		printf("Ofxwrap: in props_GetDoubleN(), asked for frame range, returned %f-%f\n", value[0], value[1]);
+	}
 	return kOfxStatOK;
 }
 OfxStatus props_GetIntN(OfxPropertySetHandle properties, const char *property, int count, int *value) {

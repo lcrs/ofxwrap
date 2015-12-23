@@ -32,6 +32,34 @@ float *outputframe = NULL;
 #include "ifxs.h"
 #include "parms.h"
 
+// UI controls page 1, controls 6-34
+//	 6    13    20    27    34
+//	 7    14    21    28
+//	 8    15    22    29
+//	 9    16    23    30
+//	10    17    24    31
+//	11    18    25    32
+//	12    19    26    33
+
+SparkStringStruct SparkString7 = {
+	"/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx",
+	(char *) "Plugin: %s",
+	0,
+	NULL
+};
+
+unsigned long *prepare(int what, SparkInfoStruct si);
+SparkPushStruct SparkPush9 = {
+	(char *) "Prepare Noise Profile",
+	prepare
+};
+
+unsigned long *adjust(int what, SparkInfoStruct si);
+SparkPushStruct SparkPush10 = {
+	(char *) "Adjust Filter Settings",
+	adjust
+};
+
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
@@ -132,9 +160,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	int effectiveuid = geteuid();
 	setuid(realuid);
 
-	const char *inprops = "describeincontextprops";
-	OfxPropertySetHandle inpropshandle = (OfxPropertySetHandle) inprops;
-	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffecthandle, inpropshandle, NULL);
+	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffecthandle, (OfxPropertySetHandle) "describeincontextprops", NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: describeincontext action: ok\n");
@@ -210,7 +236,7 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 			currentframe[y * sparkw * 4 + x * 4 + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 0));
 			currentframe[y * sparkw * 4 + x * 4 + 1] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 2));
 			currentframe[y * sparkw * 4 + x * 4 + 2] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 4));
-			currentframe[y * sparkw * 4 + x * 4 + 3] = 0.0;
+			currentframe[y * sparkw * 4 + x * 4 + 3] = 1.0;
 		}
 	}
 
@@ -306,4 +332,65 @@ void SparkEvent(SparkModuleEvent e) {
 
 void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 	printf("Ofxwrap: in SparkIOEvent(), event is %d, path is %s, file is %s\n", (int)e, path, file);
+}
+
+unsigned long *prepare(int what, SparkInfoStruct si) {
+	OfxStatus s = plugin->mainEntry(kOfxActionBeginInstanceChanged, instancehandle, (OfxPropertySetHandle) "begininstancechangeprops", NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: begin changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: begin changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: begin changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: begin changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: begin changed action: missing feature!");
+		default:
+			printf("Ofxwrap: begin changed action: returned %d\n", s);
+	}
+	s = plugin->mainEntry(kOfxActionInstanceChanged, instancehandle, (OfxPropertySetHandle) "instancechangeprops", NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: changed action: missing feature!");
+		default:
+			printf("Ofxwrap: changed action: returned %d\n", s);
+	}
+	s = plugin->mainEntry(kOfxActionEndInstanceChanged, instancehandle, (OfxPropertySetHandle) "endinstancechangeprops", NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: end changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: end changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: end changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: end changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: end changed action: missing feature!");
+		default:
+			printf("Ofxwrap: end changed action: returned %d\n", s);
+	}
+	sparkReprocess();
+	return NULL;
+}
+
+
+unsigned long *adjust(int what, SparkInfoStruct si) {
+	return NULL;
 }
