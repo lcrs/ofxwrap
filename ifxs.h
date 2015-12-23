@@ -4,6 +4,8 @@ OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
 OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
 OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
 OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
+OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) "currentframeimage";
+OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) "outputimage";
 
 
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
@@ -47,10 +49,21 @@ OfxStatus ifxs_clipGetPropertySet(OfxImageClipHandle clip, OfxPropertySetHandle 
 OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRectD *region, OfxPropertySetHandle *imageHandle) {
 	printf("Ofxwrap: in ifxs_clipGetImage(), clip is %p, time is %f, region is %p, image handle is %p\n", clip, time, region, imageHandle);
 	if(clip == sourcecliphandle) {
-		printf("Ofxwrap: in ifxs_clipGetImage(), clip is source, returning... what, exactly?\n");
+		printf("Ofxwrap: in ifxs_clipGetImage(), clip is source, ");
+		if(time == sparktime) {
+			printf("frame is current, returning handle...\n");
+			*imageHandle = currentframeimagehandle;
+		}
 	}
 	if(clip == outputcliphandle) {
-		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, returning... a mystery\n");
+		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, \n");
+		if(time == sparktime) {
+			printf("frame is current, returning handle...\n");
+			*imageHandle = outputimagehandle;
+		} else {
+			printf("frame is not current, returning null!\n");
+			*imageHandle = NULL;
+		}
 	}
 	return kOfxStatOK;
 }
