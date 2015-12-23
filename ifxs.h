@@ -1,13 +1,3 @@
-#include "openfx/include/ofxImageEffect.h"
-
-OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
-OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
-OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
-OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
-OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) "currentframeimage";
-OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) "outputimage";
-
-
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
 	printf("Ofxwrap: in ifxs_getPropertySet(), effect handle is %p, prop handle is %p\n", imageEffect, propHandle);
   if(imageEffect == imageeffecthandle) {
@@ -51,18 +41,27 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 	if(clip == sourcecliphandle) {
 		printf("Ofxwrap: in ifxs_clipGetImage(), clip is source, ");
 		if(time == sparktime) {
-			printf("frame is current, returning handle\n");
 			*imageHandle = currentframeimagehandle;
+			printf("frame is current, returning handle %p\n", *imageHandle);
+		} else if(time == sparktime - 1.0) {
+			*imageHandle = currentframeimagehandle;
+			printf("frame is previous, returning current handle for now! %p\n", *imageHandle);
+		} else if(time == sparktime + 1.0) {
+			*imageHandle = currentframeimagehandle;
+			printf("frame is next, returning current handle for now! %p\n", *imageHandle);
+		} else {
+			*imageHandle = NULL;
+			printf("frame is not current/previous/next, returning null!\n");
 		}
 	}
 	if(clip == outputcliphandle) {
 		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, ");
 		if(time == sparktime) {
-			printf("frame is current, returning handle\n");
 			*imageHandle = outputimagehandle;
+			printf("frame is current, returning handle %p\n", *imageHandle);
 		} else {
-			printf("frame is not current, returning null!\n");
 			*imageHandle = NULL;
+			printf("frame is not current, returning null!\n");
 		}
 	}
 	return kOfxStatOK;

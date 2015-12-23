@@ -1,5 +1,3 @@
-#include "openfx/include/ofxDialog.h"
-
 OfxStatus dialogs_RequestDialog(void *user_data) {
 	printf("Ofxwrap: in dialogs_RequestDialog(), user data is %p\n", user_data);
 	return kOfxStatOK;

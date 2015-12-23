@@ -3,12 +3,34 @@
 #include <unistd.h>
 #include "/usr/discreet/presets/2016/sparks/spark.h"
 #include "openfx/include/ofxCore.h"
+#include "openfx/include/ofxProperty.h"
+#include "openfx/include/ofxImageEffect.h"
+#include "openfx/include/ofxParam.h"
+#include "openfx/include/ofxDialog.h"
+
+OfxPlugin *plugin = NULL;
+OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
+OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
+OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) "instance";
+OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
+OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
+OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
+OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
+OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
+OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
+OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) "currentframeimage";
+OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) "outputimage";
+void *instancedata = NULL;
+double sparktime = 0.0;
+int sparkw = 0;
+int sparkh = 0;
+float *currentframe = NULL;
+float *outputframe = NULL;
+
 #include "props.h"
 #include "dialogs.h"
 #include "ifxs.h"
 #include "parms.h"
-
-OfxPlugin *plugin = NULL;
 
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
 	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
@@ -173,11 +195,26 @@ int SparkClips(void) {
 unsigned long *SparkProcess(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
 
-	sparktime = si.FrameNo;
-
 	SparkMemBufStruct result, front;
 	if(!bufferReady(1, &result)) return(NULL);
 	if(!bufferReady(2, &front)) return(NULL);
+
+	sparktime = si.FrameNo;
+	sparkw = front.BufWidth;
+	sparkh = front.BufHeight;
+
+	// Convert RGB 16-bit half buffers to RGBA 32-bit float
+	currentframe = (float *) malloc(sparkw * sparkh * 4 * 4);
+	for(int x = 0; x < sparkw; x++) {
+		for(int y = 0; y < sparkh; y++) {
+			currentframe[y * sparkw * 4 + x + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x));
+			currentframe[y * sparkw * 4 + x + 1] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 2));
+			currentframe[y * sparkw * 4 + x + 2] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 4));
+			currentframe[y * sparkw * 4 + x + 3] = 0.0;
+		}
+	}
+
+	outputframe = (float *) malloc(sparkw * sparkh * 4 * 4);
 
 	OfxStatus s = plugin->mainEntry(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 	switch(s) {
@@ -232,6 +269,18 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		default:
 			printf("Ofxwrap: end seq action: returned %d\n", s);
 	}
+
+	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
+	for(int x = 0; x < sparkw; x++) {
+		for(int y = 0; y < sparkh; y++) {
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x)) = outputframe[y * sparkw * 4 + x];
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x + 1];
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x + 2];
+		}
+	}
+
+	free(currentframe);
+	free(outputframe);
 
 	return NULL;
 }

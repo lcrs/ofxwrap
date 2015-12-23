@@ -1,6 +1,3 @@
-#include <stdarg.h>
-#include "openfx/include/ofxParam.h"
-
 OfxStatus parms_Define(OfxParamSetHandle paramSet, const char *paramType, const char *name, OfxPropertySetHandle *propertySet) {
   printf("Ofxwrap: in parms_Define(), parm set handle is %p, parm type is %s, name is %s, prop set handle is %p\n", paramSet, paramType, name, propertySet);
 	return kOfxStatOK;
