@@ -21,7 +21,8 @@ void *instancedata = NULL;
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
 	printf("Ofxwrap: in props_SetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
-	if(property == kOfxPropInstanceData) {
+	if(strcmp(property, kOfxPropInstanceData) == 0) {
+		printf("Ofxwrap: in props_SetPointer(), setting instance data pointer to %p\n", value);
 		instancedata = value;
 	}
 	return kOfxStatOK;
@@ -60,10 +61,8 @@ OfxStatus props_SetIntN(OfxPropertySetHandle properties, const char *property, i
 // Getters
 OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property, int index, void **value) {
 	printf("Ofxwrap: in props_GetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
-	if(property == kOfxPropInstanceData) {
-		if(instancedata == NULL) {
-			printf("Ofxwrap: in props_GetPointer(), asked for instance data but it is null!\n");
-		}
+	if(strcmp(property, kOfxPropInstanceData) == 0) {
+		printf("Ofxwrap: in props_SetPointer(), returning instance data pointer %p\n", instancedata);
 		*value = instancedata;
 	}
 	return kOfxStatOK;

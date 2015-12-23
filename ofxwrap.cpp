@@ -104,6 +104,12 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: describe action: returned %d\n", s);
 	}
 
+	// Crashes inside the plugin binary unless we do this :( Could be looking for
+	// a user prefs folder and getting confused by Flame's real/effective uid mismatch
+	int realuid = getuid();
+	int effectiveuid = geteuid();
+	setuid(realuid);
+
 	const char *inprops = "describeincontextprops";
 	OfxPropertySetHandle inpropshandle = (OfxPropertySetHandle) inprops;
 	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffect, inpropshandle, NULL);
@@ -121,11 +127,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: describeincontext action: returned %d\n", s);
 	}
 
-	// Crashes inside the plugin binary unless we do this :( Looks like it could looking for
-	// a user prefs folder and getting confused by Flame real/effective uid mismatch
-	setuid(0);
 	s = plugin->mainEntry(kOfxActionCreateInstance, instancehandle, NULL, NULL);
-	setuid(getuid());
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: create action: ok\n");
@@ -139,6 +141,9 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 		default:
 			printf("Ofxwrap: create action: returned %d\n", s);
 	}
+
+	// Back to normal please
+	setuid(effectiveuid);
 
 	s = plugin->mainEntry(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
 	switch(s) {
