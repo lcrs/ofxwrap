@@ -51,14 +51,14 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 	if(clip == sourcecliphandle) {
 		printf("Ofxwrap: in ifxs_clipGetImage(), clip is source, ");
 		if(time == sparktime) {
-			printf("frame is current, returning handle...\n");
+			printf("frame is current, returning handle\n");
 			*imageHandle = currentframeimagehandle;
 		}
 	}
 	if(clip == outputcliphandle) {
-		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, \n");
+		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, ");
 		if(time == sparktime) {
-			printf("frame is current, returning handle...\n");
+			printf("frame is current, returning handle\n");
 			*imageHandle = outputimagehandle;
 		} else {
 			printf("frame is not current, returning null!\n");
