@@ -89,7 +89,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 			printf("Ofxwrap: load action: returned %d\n", s);
 	}
 
-	s = plugin->mainEntry(kOfxActionDescribe, imageeffect, NULL, NULL);
+	s = plugin->mainEntry(kOfxActionDescribe, imageeffecthandle, NULL, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: describe action: ok\n");
@@ -112,7 +112,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 
 	const char *inprops = "describeincontextprops";
 	OfxPropertySetHandle inpropshandle = (OfxPropertySetHandle) inprops;
-	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffect, inpropshandle, NULL);
+	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffecthandle, inpropshandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: describeincontext action: ok\n");
@@ -172,6 +172,8 @@ int SparkClips(void) {
 
 unsigned long *SparkProcess(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
+
+	sparktime = si.FrameNo;
 
 	SparkMemBufStruct result, front;
 	if(!bufferReady(1, &result)) return(NULL);

@@ -1,22 +1,13 @@
 #include "openfx/include/ofxProperty.h"
 #include "openfx/include/ofxImageEffect.h"
 
-const char *hostpropset = "hostpropset";
-OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) hostpropset;
-
-const char *imageeffect = "imageeffect";
-OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) imageeffect;
-
-const char *instance = "instance";
-OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) instance;
-
-const char *beginseqpropset = "beginseq";
-OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) beginseqpropset;
-
-const char *renderpropset = "render";
-OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) renderpropset;
-
+OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
+OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
+OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) "instance";
+OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
+OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
 void *instancedata = NULL;
+double sparktime = 0.0;
 
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
@@ -62,7 +53,7 @@ OfxStatus props_SetIntN(OfxPropertySetHandle properties, const char *property, i
 OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property, int index, void **value) {
 	printf("Ofxwrap: in props_GetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(strcmp(property, kOfxPropInstanceData) == 0) {
-		printf("Ofxwrap: in props_SetPointer(), returning instance data pointer %p\n", instancedata);
+		printf("Ofxwrap: in props_GetPointer(), returning instance data pointer %p\n", instancedata);
 		*value = instancedata;
 	}
 	return kOfxStatOK;
@@ -85,6 +76,10 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 }
 OfxStatus props_GetDouble(OfxPropertySetHandle properties, const char *property, int index, double *value) {
 	printf("Ofxwrap: in props_GetDouble(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
+	if(strcmp(property, kOfxPropTime) == 0) {
+		printf("Ofxwrap: in props_GetDouble(), asked for time, returning %f\n", sparktime);
+		*value = sparktime;
+	}
 	return kOfxStatOK;
 }
 OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, int index, int *value) {

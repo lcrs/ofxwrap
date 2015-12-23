@@ -1,5 +1,11 @@
 #include "openfx/include/ofxImageEffect.h"
 
+OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
+OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
+OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
+OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
+
+
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
 	printf("Ofxwrap: in ifxs_getPropertySet(), effect handle is %p, prop handle is %p\n", imageEffect, propHandle);
   if(imageEffect == imageeffecthandle) {
@@ -22,6 +28,14 @@ OfxStatus ifxs_clipDefine(OfxImageEffectHandle imageEffect, const char *name, Of
 
 OfxStatus ifxs_clipGetHandle(OfxImageEffectHandle imageEffect, const char *name, OfxImageClipHandle *clip, OfxPropertySetHandle *propertySet) {
 	printf("Ofxwrap: in ifxs_clipGetHandle(), effect handle is %p, name is %s, clip is %p, prop set handle is %p\n", imageEffect, name, clip, propertySet);
+	if(strcmp(name, "Source") == 0) {
+		printf("Ofxwrap: in ifxs_clipGetHandle(), asked for source, returning clip %p\n", sourcecliphandle);
+		*clip = sourcecliphandle;
+	}
+	if(strcmp(name, "Output") == 0) {
+		printf("Ofxwrap: in ifxs_clipGetHandle(), asked for output, returning clip %p\n", outputcliphandle);
+		*clip = outputcliphandle;
+	}
 	return kOfxStatOK;
 }
 
@@ -32,6 +46,12 @@ OfxStatus ifxs_clipGetPropertySet(OfxImageClipHandle clip, OfxPropertySetHandle 
 
 OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRectD *region, OfxPropertySetHandle *imageHandle) {
 	printf("Ofxwrap: in ifxs_clipGetImage(), clip is %p, time is %f, region is %p, image handle is %p\n", clip, time, region, imageHandle);
+	if(clip == sourcecliphandle) {
+		printf("Ofxwrap: in ifxs_clipGetImage(), clip is source, returning... what, exactly?\n");
+	}
+	if(clip == outputcliphandle) {
+		printf("Ofxwrap: in ifxs_clipGetImage(), clip is output, returning... a mystery\n");
+	}
 	return kOfxStatOK;
 }
 
