@@ -207,10 +207,10 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	currentframe = (float *) malloc(sparkw * sparkh * 4 * 4);
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			currentframe[y * sparkw * 4 + x + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x));
-			currentframe[y * sparkw * 4 + x + 1] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 2));
-			currentframe[y * sparkw * 4 + x + 2] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 4));
-			currentframe[y * sparkw * 4 + x + 3] = 0.0;
+			currentframe[y * sparkw * 4 + x * 4 + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 0));
+			currentframe[y * sparkw * 4 + x * 4 + 1] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 2));
+			currentframe[y * sparkw * 4 + x * 4 + 2] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 4));
+			currentframe[y * sparkw * 4 + x * 4 + 3] = 0.0;
 		}
 	}
 
@@ -273,16 +273,16 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x)) = outputframe[y * sparkw * 4 + x];
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x + 1];
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x + 2];
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
+			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
 		}
 	}
 
 	free(currentframe);
 	free(outputframe);
 
-	return NULL;
+	return(result.Buffer);
 }
 
 void SparkUnInitialise(SparkInfoStruct si) {

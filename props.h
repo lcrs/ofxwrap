@@ -99,6 +99,12 @@ OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, in
 			printf("Ofxwrap: in props_GetInt(), asked for source current frame row stride, returning %d\n", *value);
 		}
 	}
+	if(properties == outputimagehandle) {
+		if(strcmp(property, kOfxImagePropRowBytes) == 0) {
+			*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
+			printf("Ofxwrap: in props_GetInt(), asked for output row stride, returning %d\n", *value);
+		}
+	}
 	return kOfxStatOK;
 }
 
