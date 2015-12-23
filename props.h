@@ -71,7 +71,7 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
-			*value = (char *) "fr.inria.Natron";
+			*value = (char *) "Dustbuster";
 		}
 	}
 	if(strcmp((char *)properties, "describeincontextprops") == 0) {
