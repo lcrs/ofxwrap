@@ -29,8 +29,8 @@ void *instancedata = NULL;
 double sparktime = 0.0;
 int sparkw = 0;
 int sparkh = 0;
-float *currentframe = NULL;
-float *outputframe = NULL;
+float * __restrict__ currentframe = NULL;
+float * __restrict__ outputframe = NULL;
 long uniqueid = 0;
 char *uniquestring = NULL;
 
@@ -214,11 +214,14 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	action(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 
 	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
+	void * __restrict__ rbuf;
+	rbuf = result.Buffer;
+
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
-			*((half *) (((char *)result.Buffer) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
+			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
+			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
+			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
 		}
 	}
 

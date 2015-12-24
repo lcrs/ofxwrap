@@ -1,4 +1,4 @@
-CFLAGS = -O0 -g -fPIC -DDL_LITTLE_ENDIAN
+CFLAGS = -O3 -fPIC -DDL_LITTLE_ENDIAN
 LDFLAGS = -fPIC
 
 ifeq ($(shell uname), Darwin)
