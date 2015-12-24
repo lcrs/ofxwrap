@@ -43,15 +43,19 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 		if(time == sparktime) {
 			*imageHandle = currentframeimagehandle;
 			printf("frame is current, returning handle %p\n", *imageHandle);
+			return kOfxStatOK;
 		} else if(time == sparktime - 1.0) {
 			*imageHandle = currentframeimagehandle;
 			printf("frame is previous, returning current handle for now! %p\n", *imageHandle);
+			return kOfxStatOK;
 		} else if(time == sparktime + 1.0) {
 			*imageHandle = currentframeimagehandle;
 			printf("frame is next, returning current handle for now! %p\n", *imageHandle);
+			return kOfxStatOK;
 		} else {
 			*imageHandle = currentframeimagehandle;
 			printf("frame is not current/previous/next, returning current for now!\n");
+			return kOfxStatOK;
 		}
 	}
 	if(clip == outputcliphandle) {
@@ -59,12 +63,15 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 		if(time == sparktime) {
 			*imageHandle = outputimagehandle;
 			printf("frame is current, returning handle %p\n", *imageHandle);
+			return kOfxStatOK;
 		} else {
 			*imageHandle = NULL;
-			printf("frame is not current, returning null!\n");
+			printf("frame is not current, returning null and failure status!\n");
+			return kOfxStatFailed;
 		}
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in ifxs_clipGetImage(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 
 OfxStatus ifxs_clipReleaseImage(OfxPropertySetHandle imageHandle) {
@@ -74,7 +81,8 @@ OfxStatus ifxs_clipReleaseImage(OfxPropertySetHandle imageHandle) {
 
 OfxStatus ifxs_clipGetRegionOfDefinition(OfxImageClipHandle clip, OfxTime time, OfxRectD *bounds) {
 	printf("Ofxwrap: in ifxs_clipGetRegionOfDefinition(), clip is %p, time is %f, bounds is %p\n", clip, time, bounds);
-	return kOfxStatOK;
+	printf("Ofxwrap: in ifxs_clipGetRegionOfDefinition(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 
 int ifxs_abort(OfxImageEffectHandle imageEffect) {
