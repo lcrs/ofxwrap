@@ -32,6 +32,12 @@ float *outputframe = NULL;
 #include "ifxs.h"
 #include "parms.h"
 
+#ifdef __APPLE__
+	#define PLUGIN "/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx"
+#else
+	#define PLUGIN "/usr/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/Linux-x86-64/NeatVideo4.ofx"
+#endif
+
 // UI controls page 1, controls 6-34
 //	 6    13    20    27    34
 //	 7    14    21    28
@@ -40,11 +46,10 @@ float *outputframe = NULL;
 //	10    17    24    31
 //	11    18    25    32
 //	12    19    26    33
-
 SparkStringStruct SparkString7 = {
-	"/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx",
-	(char *) "Plugin: %s",
-	0,
+	PLUGIN,
+	(char *) "%s",
+	SPARK_FLAG_NO_INPUT,
 	NULL
 };
 
@@ -96,7 +101,7 @@ int bufferReady(int id, SparkMemBufStruct *b) {
 unsigned int SparkInitialise(SparkInfoStruct si) {
 	printf("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
 
-	void *dlhandle = dlopen("/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx", RTLD_LAZY);
+	void *dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 	if(dlhandle == NULL) {
 		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
 	}
