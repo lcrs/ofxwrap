@@ -42,28 +42,33 @@ OfxStatus props_SetIntN(OfxPropertySetHandle properties, const char *property, i
 OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property, int index, void **value) {
 	printf("Ofxwrap: in props_GetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(strcmp(property, kOfxPropInstanceData) == 0) {
-		printf("Ofxwrap: in props_GetPointer(), returning instance data pointer %p\n", instancedata);
 		*value = instancedata;
+		printf("Ofxwrap: in props_GetPointer(), returning instance data pointer %p\n", *value);
+		return kOfxStatOK;
 	}
 	if(properties == currentframeimagehandle) {
 		if(strcmp(property, kOfxImagePropData) == 0) {
 			*value = currentframe;
-			printf("Ofxwrap: in props_GetPointer(), asked for source current frame pointer, returning %p\n", currentframe);
+			printf("Ofxwrap: in props_GetPointer(), asked for source current frame pointer, returning %p\n", *value);
+			return kOfxStatOK;
 		}
 	}
 	if(properties == outputimagehandle) {
 		if(strcmp(property, kOfxImagePropData) == 0) {
 			*value = outputframe;
-			printf("Ofxwrap: in props_GetPointer(), asked for output frame pointer, returning %p\n", outputframe);
+			printf("Ofxwrap: in props_GetPointer(), asked for output frame pointer, returning %p\n", *value);
+			return kOfxStatOK;
 		}
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetPointer(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property, int index, char **value) {
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropName) == 0) {
 			*value = (char *) "uk.co.thefoundry.nuke";
+			printf("Ofxwrap: in props_GetString(), asked for name, returned %s\n", *value);
 			return kOfxStatOK;
 		}
 	}
@@ -72,25 +77,45 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 		printf("Ofxwrap: in props_GetString(), asked for field order, returned %s\n", *value);
 		return kOfxStatOK;
 	}
+	if(strcmp(property, kOfxImagePropField) == 0) {
+		*value = (char *) kOfxImageFieldNone;
+		printf("Ofxwrap: in props_GetString(), asked for which field image is, returned %s\n", *value);
+		return kOfxStatOK;
+	}
+	if(strcmp(property, kOfxImageEffectPropFieldToRender) == 0) {
+		*value = (char *) kOfxImageFieldNone;
+		printf("Ofxwrap: in props_GetString(), asked for which field to render, returned %s\n", *value);
+		return kOfxStatOK;
+	}
 	if(strcmp(property, kOfxImageEffectPropPixelDepth) == 0) {
 		*value = (char *) kOfxBitDepthFloat;
 		printf("Ofxwrap: in props_GetString(), asked for pixel depth, returned %s\n", *value);
+		return kOfxStatOK;
+	}
+	if(strcmp(property, kOfxImagePropUniqueIdentifier) == 0) {
+		uniqueid++;
+		sprintf(uniquestring, "%ld", uniqueid);
+		*value = (char *) uniquestring;
+		printf("Ofxwrap: in props_GetString(), asked for unique id, returned %s\n", *value);
 		return kOfxStatOK;
 	}
 	if(properties == describeincontextpropsethandle) {
 		if(strcmp(property, kOfxImageEffectPropContext) == 0) {
 			*value = (char *) kOfxImageEffectContextFilter;
 			printf("Ofxwrap: in props_GetString(), returned %s\n", *value);
+			return kOfxStatOK;
 		}
 	}
 	if(properties == begininstancechangepropsethandle || properties == endinstancechangepropsethandle || properties == preparebuttonchangepropsethandle || properties == adjustbuttonchangepropsethandle) {
 		if(strcmp(property, kOfxPropChangeReason) == 0) {
 			*value = (char *) kOfxChangeUserEdited;
 			printf("Ofxwrap: in props_GetString(), asked for change reason, returned %s\n", *value);
+			return kOfxStatOK;
 		}
 		if(strcmp(property, kOfxPropType) == 0) {
 			*value = (char *) kOfxTypeParameter;
 			printf("Ofxwrap: in props_GetString(), asked for change prop type, returned %s\n", *value);
+			return kOfxStatOK;
 		}
 		if(strcmp(property, kOfxPropName) == 0) {
 			if(properties == preparebuttonchangepropsethandle) {
@@ -101,63 +126,78 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 				*value = (char *) "Unhandled parameter name!";
 			}
 			printf("Ofxwrap: in props_GetString(), asked for change prop name, returned %s\n", *value);
+			return kOfxStatOK;
 		}
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetString(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetDouble(OfxPropertySetHandle properties, const char *property, int index, double *value) {
 	printf("Ofxwrap: in props_GetDouble(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(strcmp(property, kOfxPropTime) == 0) {
 		printf("Ofxwrap: in props_GetDouble(), asked for time, returning %f\n", sparktime);
 		*value = sparktime;
+		return kOfxStatOK;
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetDouble(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, int index, int *value) {
 	printf("Ofxwrap: in props_GetInt(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxImageEffectPropTemporalClipAccess) == 0) {
 			*value = 1;
+			printf("Ofxwrap: in props_GetInt(), asked for temporal clip access, returning %d\n", *value);
+			return kOfxStatOK;
 		}
 	}
 	if(properties == currentframeimagehandle) {
 		if(strcmp(property, kOfxImagePropRowBytes) == 0) {
 			*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
 			printf("Ofxwrap: in props_GetInt(), asked for source current frame row stride, returning %d\n", *value);
+			return kOfxStatOK;
 		}
 	}
 	if(properties == outputimagehandle) {
 		if(strcmp(property, kOfxImagePropRowBytes) == 0) {
 			*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
 			printf("Ofxwrap: in props_GetInt(), asked for output row stride, returning %d\n", *value);
+			return kOfxStatOK;
 		}
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetInt(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 
 // Multi-dimensional getters
 OfxStatus props_GetPointerN(OfxPropertySetHandle properties, const char *property, int count, void **value) {
 	printf("Ofxwrap: in props_GetPointerN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetPointerN(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetStringN(OfxPropertySetHandle properties, const char *property, int count, char **value) {
 	printf("Ofxwrap: in props_GetStringN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetSringN(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetDoubleN(OfxPropertySetHandle properties, const char *property, int count, double *value) {
 	printf("Ofxwrap: in props_GetDoubleN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
 	if(strcmp(property, kOfxImageEffectPropFrameRange) == 0) {
 		value[0] = 0.0;
-		value[1] = 1000.0;
-		printf("Ofxwrap: in props_GetDoubleN(), asked for frame range, returned %f-%f\n", value[0], value[1]);
+		value[1] = 99999999.0;
+		printf("Ofxwrap: in props_GetDoubleN(), asked for frame range, returned %f - %f\n", value[0], value[1]);
+		return kOfxStatOK;
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetDoubleN(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 OfxStatus props_GetIntN(OfxPropertySetHandle properties, const char *property, int count, int *value) {
 	printf("Ofxwrap: in props_GetIntN(), handle is %p, property is %s, count is %d, value is %p\n", properties, property, count, value);
 	if(properties == hostpropsethandle) {
 		if(strcmp(property, kOfxPropVersion) == 0) {
-			*value = 1;
+			*value = 8;
+			printf("Ofxwrap: in props_GetIntN(), asked for host version, returning %d\n", *value);
+			return kOfxStatOK;
 		}
 	}
 	if(properties == currentframeimagehandle) {
@@ -168,9 +208,11 @@ OfxStatus props_GetIntN(OfxPropertySetHandle properties, const char *property, i
 			value[2] = sparkw;
 			value[3] = sparkh;
 			printf("Ofxwrap: in props_GetIntN(), asked for clip bounds, returning %d %d %d %d\n", value[0], value[1], value[2], value[3]);
+			return kOfxStatOK;
 		}
 	}
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetIntN(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 
 // Others
@@ -180,7 +222,8 @@ OfxStatus props_Reset(OfxPropertySetHandle properties, const char *property) {
 }
 OfxStatus props_GetDimension(OfxPropertySetHandle properties, const char *property, int *count) {
 	printf("Ofxwrap: in props_GetDimension(), handle is %p, property is %s, count is %p\n", properties, property, count);
-	return kOfxStatOK;
+	printf("Ofxwrap: in props_GetDimension(), did not handle, returning failure!\n");
+	return kOfxStatFailed;
 }
 
 OfxPropertySuiteV1 props;

@@ -31,6 +31,8 @@ int sparkw = 0;
 int sparkh = 0;
 float *currentframe = NULL;
 float *outputframe = NULL;
+long uniqueid = 0;
+char *uniquestring = NULL;
 
 #include "props.h"
 #include "dialogs.h"
@@ -129,6 +131,8 @@ int bufferReady(int id, SparkMemBufStruct *b) {
 unsigned int SparkInitialise(SparkInfoStruct si) {
 	printf("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
 
+	uniquestring = (char *) malloc(100);
+
 	void *dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 	if(dlhandle == NULL) {
 		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
@@ -226,6 +230,7 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
+	free(uniquestring);
 }
 
 void SparkMemoryTempBuffers(void) {
