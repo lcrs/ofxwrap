@@ -1,7 +1,7 @@
 #include "half.h"
 #include <dlfcn.h>
 #include <unistd.h>
-#include "/usr/discreet/presets/2016/sparks/spark.h"
+#include "spark.h"
 #include "openfx/include/ofxCore.h"
 #include "openfx/include/ofxProperty.h"
 #include "openfx/include/ofxImageEffect.h"
