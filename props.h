@@ -77,13 +77,13 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 		printf("Ofxwrap: in props_GetString(), asked for pixel depth, returned %s\n", *value);
 		return kOfxStatOK;
 	}
-	if(strcmp((char *)properties, "describeincontextprops") == 0) {
+	if(properties == describeincontextpropsethandle) {
 		if(strcmp(property, kOfxImageEffectPropContext) == 0) {
 			*value = (char *) kOfxImageEffectContextFilter;
 			printf("Ofxwrap: in props_GetString(), returned %s\n", *value);
 		}
 	}
-	if(strcmp((char *)properties, "begininstancechangeprops") == 0 || strcmp((char *)properties, "instancechangeprops") == 0 || strcmp((char *)properties, "endinstancechangeprops") == 0) {
+	if(properties == begininstancechangepropsethandle || properties == endinstancechangepropsethandle || properties == preparebuttonchangepropsethandle || properties == adjustbuttonchangepropsethandle) {
 		if(strcmp(property, kOfxPropChangeReason) == 0) {
 			*value = (char *) kOfxChangeUserEdited;
 			printf("Ofxwrap: in props_GetString(), asked for change reason, returned %s\n", *value);
@@ -93,7 +93,13 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 			printf("Ofxwrap: in props_GetString(), asked for change prop type, returned %s\n", *value);
 		}
 		if(strcmp(property, kOfxPropName) == 0) {
-			*value = (char *) "Prepare Profile...";
+			if(properties == preparebuttonchangepropsethandle) {
+				*value = (char *) "Prepare Profile...";
+			} else if(properties == adjustbuttonchangepropsethandle) {
+				*value = (char *) "Adjust Spatial...";
+			} else {
+				*value = (char *) "Unhandled parameter name!";
+			}
 			printf("Ofxwrap: in props_GetString(), asked for change prop name, returned %s\n", *value);
 		}
 	}

@@ -11,9 +11,14 @@
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
+OfxPropertySetHandle describeincontextpropsethandle = (OfxPropertySetHandle) "describeincontextprops";
 OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) "instance";
 OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
 OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
+OfxPropertySetHandle begininstancechangepropsethandle = (OfxPropertySetHandle) "begininstancechangeprops";
+OfxPropertySetHandle preparebuttonchangepropsethandle = (OfxPropertySetHandle) "preparebuttonchangeprops";
+OfxPropertySetHandle adjustbuttonchangepropsethandle = (OfxPropertySetHandle) "adjustbuttonchangeprops";
+OfxPropertySetHandle endinstancechangepropsethandle = (OfxPropertySetHandle) "endinstancechangeprops";
 OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
 OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
 OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
@@ -165,7 +170,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	int effectiveuid = geteuid();
 	setuid(realuid);
 
-	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffecthandle, (OfxPropertySetHandle) "describeincontextprops", NULL);
+	s = plugin->mainEntry(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: describeincontext action: ok\n");
@@ -340,7 +345,7 @@ void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 }
 
 unsigned long *prepare(int what, SparkInfoStruct si) {
-	OfxStatus s = plugin->mainEntry(kOfxActionBeginInstanceChanged, instancehandle, (OfxPropertySetHandle) "begininstancechangeprops", NULL);
+	OfxStatus s = plugin->mainEntry(kOfxActionBeginInstanceChanged, instancehandle, begininstancechangepropsethandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: begin changed action: ok\n");
@@ -357,7 +362,7 @@ unsigned long *prepare(int what, SparkInfoStruct si) {
 		default:
 			printf("Ofxwrap: begin changed action: returned %d\n", s);
 	}
-	s = plugin->mainEntry(kOfxActionInstanceChanged, instancehandle, (OfxPropertySetHandle) "instancechangeprops", NULL);
+	s = plugin->mainEntry(kOfxActionInstanceChanged, instancehandle, preparebuttonchangepropsethandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: changed action: ok\n");
@@ -374,7 +379,7 @@ unsigned long *prepare(int what, SparkInfoStruct si) {
 		default:
 			printf("Ofxwrap: changed action: returned %d\n", s);
 	}
-	s = plugin->mainEntry(kOfxActionEndInstanceChanged, instancehandle, (OfxPropertySetHandle) "endinstancechangeprops", NULL);
+	s = plugin->mainEntry(kOfxActionEndInstanceChanged, instancehandle, endinstancechangepropsethandle, NULL);
 	switch(s) {
 		case kOfxStatOK:
 			printf("Ofxwrap: end changed action: ok\n");
@@ -397,5 +402,57 @@ unsigned long *prepare(int what, SparkInfoStruct si) {
 
 
 unsigned long *adjust(int what, SparkInfoStruct si) {
+	OfxStatus s = plugin->mainEntry(kOfxActionBeginInstanceChanged, instancehandle, begininstancechangepropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: begin changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: begin changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: begin changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: begin changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: begin changed action: missing feature!");
+		default:
+			printf("Ofxwrap: begin changed action: returned %d\n", s);
+	}
+	s = plugin->mainEntry(kOfxActionInstanceChanged, instancehandle, adjustbuttonchangepropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: changed action: missing feature!");
+		default:
+			printf("Ofxwrap: changed action: returned %d\n", s);
+	}
+	s = plugin->mainEntry(kOfxActionEndInstanceChanged, instancehandle, endinstancechangepropsethandle, NULL);
+	switch(s) {
+		case kOfxStatOK:
+			printf("Ofxwrap: end changed action: ok\n");
+			break;
+		case kOfxStatReplyDefault:
+			printf("Ofxwrap: end changed action: default\n");
+			break;
+		case kOfxStatFailed:
+			sparkError("Ofxwrap: end changed action: failed!");
+		case kOfxStatErrFatal:
+			sparkError("Ofxwrap: end changed action: fatal error!");
+		case kOfxStatErrMissingHostFeature:
+			sparkError("Ofxwrap: end changed action: missing feature!");
+		default:
+			printf("Ofxwrap: end changed action: returned %d\n", s);
+	}
+	sparkReprocess();
 	return NULL;
 }
