@@ -23,16 +23,16 @@ OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
 OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
 OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
 OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
-OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) "currentframeimage";
-OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) "outputimage";
+OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) NULL;
+OfxPropertySetHandle temporalframeimagehandles[11];
+OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
 void *instancedata = NULL;
 double sparktime = 0.0;
 int sparkw = 0;
 int sparkh = 0;
-float *currentframe = NULL;
-float *outputframe = NULL;
 long uniqueid = 0;
 char *uniquestring = NULL;
+int temporalids[11];
 
 #include "props.h"
 #include "dialogs.h"
@@ -198,32 +198,64 @@ int SparkClips(void) {
 	return 1;
 }
 
+void SparkMemoryTempBuffers(void) {
+	for(int i = 0; i < 11; i++) {
+		temporalids[i] = sparkMemRegisterBuffer();
+	}
+}
+
+void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
+	for(int x = 0; x < sparkw; x++) {
+		for(int y = 0; y < sparkh; y++) {
+			out[y * sparkw * 4 + x * 4 + 0] = *(half *)(in + stride * y + inc * x + 0);
+			out[y * sparkw * 4 + x * 4 + 1] = *(half *)(in + stride * y + inc * x + 2);
+			out[y * sparkw * 4 + x * 4 + 2] = *(half *)(in + stride * y + inc * x + 4);
+			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
+		}
+	}
+}
+
 unsigned long *SparkProcess(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
 
-	SparkMemBufStruct result, front;
+	SparkMemBufStruct result, front, temporalbuffers[11];
 	if(!bufferReady(1, &result)) return(NULL);
 	if(!bufferReady(2, &front)) return(NULL);
+	for(int i = 0; i < 11; i++) {
+		if(!bufferReady(temporalids[i], &temporalbuffers[i])) return(NULL);
+	}
 
 	sparktime = si.FrameNo;
 	sparkw = front.BufWidth;
 	sparkh = front.BufHeight;
 
+	// Let's be very clear here about which frame is in which buffer
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 5, temporalbuffers[0].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 4, temporalbuffers[1].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 3, temporalbuffers[2].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 2, temporalbuffers[3].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 1, temporalbuffers[4].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 1, temporalbuffers[5].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 2, temporalbuffers[6].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 3, temporalbuffers[7].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 4, temporalbuffers[8].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 5, temporalbuffers[9].Buffer);
+	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 6, temporalbuffers[10].Buffer);
+
 	// Convert RGB 16-bit half buffers to RGBA 32-bit float
-	currentframe = (float *) malloc(sparkw * sparkh * 4 * 4);
-	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframe);
+	currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
 	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
-	for(int x = 0; x < sparkw; x++) {
-		for(int y = 0; y < sparkh; y++) {
-			currentframe[y * sparkw * 4 + x * 4 + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 0));
-			currentframe[y * sparkw * 4 + x * 4 + 1] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 2));
-			currentframe[y * sparkw * 4 + x * 4 + 2] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 4));
-			currentframe[y * sparkw * 4 + x * 4 + 3] = 1.0;
-		}
+	rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
+
+	for(int i = 0; i < 11; i++) {
+		temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		rgb16fp_to_rgba32fp((char *)temporalbuffers[i].Buffer, temporalbuffers[i].Stride, temporalbuffers[i].Inc, (float *)temporalframeimagehandles[i]);
 	}
 
-	outputframe = (float *) malloc(sparkw * sparkh * 4 * 4);
-	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputframe);
+	outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	float *outputframe = (float *) outputimagehandle;
+	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
 	printf("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
 
 	action(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
@@ -233,7 +265,6 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
 	void *rbuf;
 	rbuf = result.Buffer;
-
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
 			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
@@ -242,8 +273,11 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		}
 	}
 
-	free(currentframe);
-	free(outputframe);
+	free(currentframeimagehandle);
+	for(int i = 0; i < 11; i++) {
+		free(temporalframeimagehandles[i]);
+	}
+	free(outputimagehandle);
 
 	return(result.Buffer);
 }
@@ -251,10 +285,6 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 	free(uniquestring);
-}
-
-void SparkMemoryTempBuffers(void) {
-	// This has to be defined to keep Batch happy
 }
 
 int SparkIsInputFormatSupported(SparkPixelFormat fmt) {

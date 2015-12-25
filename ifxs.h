@@ -44,17 +44,48 @@ OfxStatus ifxs_clipGetImage(OfxImageClipHandle clip, OfxTime time, const OfxRect
 			*imageHandle = currentframeimagehandle;
 			printf("frame is current, returning handle %p\n", *imageHandle);
 			return kOfxStatOK;
-		} else if(time == sparktime - 1.0) {
-			*imageHandle = currentframeimagehandle;
-			printf("frame is previous, returning current handle for now! %p\n", *imageHandle);
-			return kOfxStatOK;
-		} else if(time == sparktime + 1.0) {
-			*imageHandle = currentframeimagehandle;
-			printf("frame is next, returning current handle for now! %p\n", *imageHandle);
-			return kOfxStatOK;
 		} else {
-			*imageHandle = currentframeimagehandle;
-			printf("frame is not current/previous/next, returning current for now!\n");
+			// Again being ultra-explicit here...
+			int delta = time - sparktime;
+			switch(delta) {
+				case -5:
+					*imageHandle = temporalframeimagehandles[0];
+				break;
+				case -4:
+					*imageHandle = temporalframeimagehandles[1];
+				break;
+				case -3:
+					*imageHandle = temporalframeimagehandles[2];
+				break;
+				case -2:
+					*imageHandle = temporalframeimagehandles[3];
+				break;
+				case -1:
+					*imageHandle = temporalframeimagehandles[4];
+				break;
+				case 1:
+					*imageHandle = temporalframeimagehandles[5];
+				break;
+				case 2:
+					*imageHandle = temporalframeimagehandles[6];
+				break;
+				case 3:
+					*imageHandle = temporalframeimagehandles[7];
+				break;
+				case 4:
+					*imageHandle = temporalframeimagehandles[8];
+				break;
+				case 5:
+					*imageHandle = temporalframeimagehandles[9];
+				break;
+				case 6:
+					*imageHandle = temporalframeimagehandles[10];
+				break;
+				default:
+					*imageHandle = currentframeimagehandle;
+					printf("frame is beyond what we were expecting! Returning current... ");
+			}
+			printf("frame delta is %d, returning handle %p\n", delta, *imageHandle);
 			return kOfxStatOK;
 		}
 	}

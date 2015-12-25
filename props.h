@@ -48,14 +48,23 @@ OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property
 	}
 	if(properties == currentframeimagehandle) {
 		if(strcmp(property, kOfxImagePropData) == 0) {
-			*value = currentframe;
+			*value = currentframeimagehandle;
 			printf("Ofxwrap: in props_GetPointer(), asked for source current frame pointer, returning %p\n", *value);
 			return kOfxStatOK;
 		}
 	}
+	for(int i = 0; i < 11; i++) {
+		if(properties == temporalframeimagehandles[i]) {
+			if(strcmp(property, kOfxImagePropData) == 0) {
+				*value = temporalframeimagehandles[i];
+				printf("Ofxwrap: in props_GetPointer(), asked for source temporal frame pointer, returning %p\n", *value);
+				return kOfxStatOK;
+			}
+		}
+	}
 	if(properties == outputimagehandle) {
 		if(strcmp(property, kOfxImagePropData) == 0) {
-			*value = outputframe;
+			*value = outputimagehandle;
 			printf("Ofxwrap: in props_GetPointer(), asked for output frame pointer, returning %p\n", *value);
 			return kOfxStatOK;
 		}
@@ -157,19 +166,10 @@ OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, in
 			return kOfxStatOK;
 		}
 	}
-	if(properties == currentframeimagehandle) {
-		if(strcmp(property, kOfxImagePropRowBytes) == 0) {
-			*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
-			printf("Ofxwrap: in props_GetInt(), asked for source current frame row stride, returning %d\n", *value);
-			return kOfxStatOK;
-		}
-	}
-	if(properties == outputimagehandle) {
-		if(strcmp(property, kOfxImagePropRowBytes) == 0) {
-			*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
-			printf("Ofxwrap: in props_GetInt(), asked for output row stride, returning %d\n", *value);
-			return kOfxStatOK;
-		}
+	if(strcmp(property, kOfxImagePropRowBytes) == 0) {
+		*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
+		printf("Ofxwrap: in props_GetInt(), asked for row stride, returning %d\n", *value);
+		return kOfxStatOK;
 	}
 	printf("Ofxwrap: in props_GetInt(), did not handle, returning failure!\n");
 	return kOfxStatFailed;
@@ -206,16 +206,13 @@ OfxStatus props_GetIntN(OfxPropertySetHandle properties, const char *property, i
 			return kOfxStatOK;
 		}
 	}
-	if(properties == currentframeimagehandle) {
-		printf("Ofxwrap: in props_GetIntN(), propset is current frame image\n");
-		if(strcmp(property, kOfxImagePropBounds) == 0) {
-			value[0] = 0;
-			value[1] = 0;
-			value[2] = sparkw;
-			value[3] = sparkh;
-			printf("Ofxwrap: in props_GetIntN(), asked for clip bounds, returning %d %d %d %d\n", value[0], value[1], value[2], value[3]);
-			return kOfxStatOK;
-		}
+	if(strcmp(property, kOfxImagePropBounds) == 0) {
+		value[0] = 0;
+		value[1] = 0;
+		value[2] = sparkw;
+		value[3] = sparkh;
+		printf("Ofxwrap: in props_GetIntN(), asked for clip bounds, returning %d %d %d %d\n", value[0], value[1], value[2], value[3]);
+		return kOfxStatOK;
 	}
 	printf("Ofxwrap: in props_GetIntN(), did not handle, returning failure!\n");
 	return kOfxStatFailed;
