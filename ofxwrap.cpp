@@ -29,8 +29,8 @@ void *instancedata = NULL;
 double sparktime = 0.0;
 int sparkw = 0;
 int sparkh = 0;
-float * __restrict__ currentframe = NULL;
-float * __restrict__ outputframe = NULL;
+float *currentframe = NULL;
+float *outputframe = NULL;
 long uniqueid = 0;
 char *uniquestring = NULL;
 
@@ -211,6 +211,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 
 	// Convert RGB 16-bit half buffers to RGBA 32-bit float
 	currentframe = (float *) malloc(sparkw * sparkh * 4 * 4);
+	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframe);
+	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
 			currentframe[y * sparkw * 4 + x * 4 + 0] = *((half *) (((char *)front.Buffer) + front.Stride * y + front.Inc * x + 0));
@@ -221,13 +223,15 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	}
 
 	outputframe = (float *) malloc(sparkw * sparkh * 4 * 4);
+	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputframe);
+	printf("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
 
 	action(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 	action(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
 	action(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 
 	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
-	void * __restrict__ rbuf;
+	void *rbuf;
 	rbuf = result.Buffer;
 
 	for(int x = 0; x < sparkw; x++) {
