@@ -97,6 +97,7 @@ const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version
 void die(const char *format, const char *arg) {
 	char *m = (char *) malloc(100);
 	sprintf(m, format, arg);
+	printf("%s", m);
 	sparkError(m);
 	free(m);
 }
@@ -112,10 +113,13 @@ void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxP
 			break;
 		case kOfxStatFailed:
 			die("Ofxwrap: %s: failed!\n", a);
+			break;
 		case kOfxStatErrFatal:
 			die("Ofxwrap: %s: fatal error!\n", a);
+			break;
 		case kOfxStatErrMissingHostFeature:
 			die("Ofxwrap: %s: missing feature!\n", a);
+			break;
 		default:
 			printf("Ofxwrap: %s: returned %d\n", a, s);
 	}
