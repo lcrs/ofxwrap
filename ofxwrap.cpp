@@ -135,12 +135,14 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 
 	void *dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 	if(dlhandle == NULL) {
-		sparkError("Ofxwrap: failed to dlopen() OFX plugin!");
+		printf("Ofxwrap: failed to dlopen() OFX plugin!\n");
+		sparkError("Ofxwrap: failed to dlopen() OFX plugin!\n");
 	}
 
 	int (*OfxGetNumberOfPlugins)(void);
 	OfxGetNumberOfPlugins = (int(*)(void)) dlsym(dlhandle, "OfxGetNumberOfPlugins");
 	if(OfxGetNumberOfPlugins == NULL) {
+		printf("Ofxwrap: failed to find plugin's OfxGetNumberOfPlugins symbol!\n");
 		sparkError("Ofxwrap: failed to find plugin's OfxGetNumberOfPlugins symbol!\n");
 	}
 	int numplugs = (*OfxGetNumberOfPlugins)();
@@ -149,10 +151,12 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	OfxPlugin *(*OfxGetPlugin)(int nth);
 	OfxGetPlugin = (OfxPlugin*(*)(int nth)) dlsym(dlhandle, "OfxGetPlugin");
 	if(OfxGetPlugin == NULL) {
+		printf("Ofxwrap: failed to find plugin's OfxGetPlugin symbol!\n");
 		sparkError("Ofxwrap: failed to find plugin's OfxGetPlugin symbol!\n");
 	}
 	plugin = (*OfxGetPlugin)(0);
 	if(plugin == NULL) {
+		printf("Ofxwrap: failed to get first plugin!\n");
 		sparkError("Ofxwrap: failed to get first plugin!\n");
 	}
 	printf("Ofxwrap: plugin id is %s\n", plugin->pluginIdentifier);
