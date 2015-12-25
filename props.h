@@ -66,9 +66,15 @@ OfxStatus props_GetPointer(OfxPropertySetHandle properties, const char *property
 OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property, int index, char **value) {
 	printf("Ofxwrap: in props_GetString(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);
 	if(properties == hostpropsethandle) {
+		printf("Ofxwrap: in props_GetString(), above handle is the host prop set\n");
 		if(strcmp(property, kOfxPropName) == 0) {
 			*value = (char *) "uk.co.thefoundry.nuke";
 			printf("Ofxwrap: in props_GetString(), asked for name, returned %s\n", *value);
+			return kOfxStatOK;
+		}
+		if(strcmp(property, kOfxPropLabel) == 0) {
+			*value = (char *) "Nuke";
+			printf("Ofxwrap: in props_GetString(), asked for label, returned %s\n", *value);
 			return kOfxStatOK;
 		}
 	}
