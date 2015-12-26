@@ -204,9 +204,13 @@ int SparkClips(void) {
 }
 
 void SparkMemoryTempBuffers(void) {
+	printf("Ofxwrap: in SparkMemoryTempBuffers()...\n");
 	for(int i = 0; i < 11; i++) {
+		printf("Ofxwrap: index %d was %d, ", i, temporalids[i]);
 		temporalids[i] = sparkMemRegisterBuffer();
+		printf("now %d\n", temporalids[i]);
 	}
+	printf("Ofxwrap: ...done with SparkMemoryTempBuffers()\n");
 }
 
 void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
