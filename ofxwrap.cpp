@@ -105,6 +105,9 @@ void die(const char *format, const char *arg) {
 }
 
 void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxPropertySetHandle out) {
+	if(plugin == NULL) {
+		die("Ofxwrap: cannot do %s, plugin has gone away!\n", a);
+	}
 	OfxStatus s = plugin->mainEntry(a, e, in, out);
 	switch(s) {
 		case kOfxStatOK:
@@ -294,9 +297,7 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 
-	if(plugin != NULL) {
-		action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
-	}
+	action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
 	instancedata = NULL;
 	free(uniquestring);
 	uniquestring = NULL;
@@ -309,9 +310,7 @@ void SparkUnInitialise(SparkInfoStruct si) {
 		temporalframeimagehandles[i] = NULL;
 	}
 
-	if(plugin != NULL) {
-		action(kOfxActionUnload, NULL, NULL, NULL);
-	}
+	action(kOfxActionUnload, NULL, NULL, NULL);
 	plugin = NULL;
 
 	int r = dlclose(dlhandle);
