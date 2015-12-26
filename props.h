@@ -181,7 +181,17 @@ OfxStatus props_GetInt(OfxPropertySetHandle properties, const char *property, in
 		}
 	}
 	if(strcmp(property, kOfxImagePropRowBytes) == 0) {
-		*value = sparkw * 4 * 4;  // RGBA 32-bit float pixels
+		switch(sparkdepth) {
+			case SPARKBUF_RGB_24_3x8:
+			case SPARKBUF_RGB_48_3x10:
+			case SPARKBUF_RGB_48_3x12:
+			case SPARKBUF_RGB_48_3x16_FP:
+				*value = sparkstride;
+			break;
+			default:
+				printf("Ofxwrap: in props_GetInt(), asked for row stride, unhandled pixel depth %d! Failing...\n", sparkdepth);
+				return kOfxStatFailed;
+		}
 		printf("Ofxwrap: in props_GetInt(), asked for row stride, returning %d\n", *value);
 		return kOfxStatOK;
 	}

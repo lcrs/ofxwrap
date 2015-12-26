@@ -30,6 +30,7 @@ OfxPropertySetHandle temporalframeimagehandles[11];
 OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
 void *instancedata = NULL;
 SparkPixelFormat sparkdepth;
+int sparkstride = 0;
 double sparktime = 0.0;
 int sparkw = 0;
 int sparkh = 0;
@@ -257,23 +258,36 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 5, temporalbuffers[9].Buffer);
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 6, temporalbuffers[10].Buffer);
 
-	// Convert RGB 16-bit half buffers to RGBA 32-bit float
-	if(currentframeimagehandle == NULL) {
-		currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
+		if(currentframeimagehandle == NULL) {
+			currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		}
+		rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
+		sparkstride = sparkw * 4 * 4;
+	} else {
+		currentframeimagehandle = (OfxPropertySetHandle) front.Buffer;
+		sparkstride = front.Stride;
 	}
 	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
 	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
-	rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
 
 	for(int i = 0; i < 11; i++) {
-		if(temporalframeimagehandles[i] == NULL) {
-			temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
+			if(temporalframeimagehandles[i] == NULL) {
+				temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+			}
+			rgb16fp_to_rgba32fp((char *)temporalbuffers[i].Buffer, temporalbuffers[i].Stride, temporalbuffers[i].Inc, (float *)temporalframeimagehandles[i]);
+		} else {
+			temporalframeimagehandles[i] = (OfxPropertySetHandle) temporalbuffers[i].Buffer;
 		}
-		rgb16fp_to_rgba32fp((char *)temporalbuffers[i].Buffer, temporalbuffers[i].Stride, temporalbuffers[i].Inc, (float *)temporalframeimagehandles[i]);
 	}
 
-	if(outputimagehandle == NULL) {
-		outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
+		if(outputimagehandle == NULL) {
+			outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		}
+	} else {
+		outputimagehandle = (OfxPropertySetHandle) result.Buffer;
 	}
 	float *outputframe = (float *) outputimagehandle;
 	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
@@ -283,14 +297,16 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	action(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
 	action(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 
-	// Convert RGBA 32-bit float output buffer to RGB 16-bit half float
-	void *rbuf;
-	rbuf = result.Buffer;
-	for(int x = 0; x < sparkw; x++) {
-		for(int y = 0; y < sparkh; y++) {
-			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
-			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
-			*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
+	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
+		// Convert 32-bit RGBA float to 16-bit RGB half
+		void *rbuf;
+		rbuf = result.Buffer;
+		for(int x = 0; x < sparkw; x++) {
+			for(int y = 0; y < sparkh; y++) {
+				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
+				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
+				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
+			}
 		}
 	}
 
@@ -304,13 +320,15 @@ void SparkUnInitialise(SparkInfoStruct si) {
 	instancedata = NULL;
 	free(uniquestring);
 	uniquestring = NULL;
-	free(currentframeimagehandle);
-	currentframeimagehandle = NULL;
-	free(outputimagehandle);
-	outputimagehandle = NULL;
-	for(int i = 0; i < 11; i++) {
-		free(temporalframeimagehandles[i]);
-		temporalframeimagehandles[i] = NULL;
+	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
+		free(currentframeimagehandle);
+		currentframeimagehandle = NULL;
+		free(outputimagehandle);
+		outputimagehandle = NULL;
+		for(int i = 0; i < 11; i++) {
+			free(temporalframeimagehandles[i]);
+			temporalframeimagehandles[i] = NULL;
+		}
 	}
 
 	action(kOfxActionUnload, NULL, NULL, NULL);
