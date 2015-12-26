@@ -8,6 +8,8 @@
 #include "openfx/include/ofxParam.h"
 #include "openfx/include/ofxDialog.h"
 
+void *dlhandle = NULL;
+OfxHost h;
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
@@ -142,7 +144,11 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 
 	uniquestring = (char *) malloc(100);
 
-	void *dlhandle = dlopen(PLUGIN, RTLD_LAZY);
+	if(plugin != NULL) {
+		printf("Ofxwrap: plugin is already alive, probable multiple instance situation!\n");
+	}
+
+	dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 	if(dlhandle == NULL) {
 		die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
 		return 0;
@@ -170,7 +176,6 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	}
 	printf("Ofxwrap: plugin id is %s\n", plugin->pluginIdentifier);
 
-	OfxHost h;
 	h.host = hostpropsethandle;
 	h.fetchSuite = &fetchSuite;
 	plugin->setHost(&h);
@@ -243,17 +248,23 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 6, temporalbuffers[10].Buffer);
 
 	// Convert RGB 16-bit half buffers to RGBA 32-bit float
-	currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	if(currentframeimagehandle == NULL) {
+		currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	}
 	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
 	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
 	rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
 
 	for(int i = 0; i < 11; i++) {
-		temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		if(temporalframeimagehandles[i] == NULL) {
+			temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		}
 		rgb16fp_to_rgba32fp((char *)temporalbuffers[i].Buffer, temporalbuffers[i].Stride, temporalbuffers[i].Inc, (float *)temporalframeimagehandles[i]);
 	}
 
-	outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	if(outputimagehandle == NULL) {
+		outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	}
 	float *outputframe = (float *) outputimagehandle;
 	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
 	printf("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
@@ -273,18 +284,39 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		}
 	}
 
-	free(currentframeimagehandle);
-	for(int i = 0; i < 11; i++) {
-		free(temporalframeimagehandles[i]);
-	}
-	free(outputimagehandle);
-
 	return(result.Buffer);
 }
 
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
+
+	if(plugin != NULL) {
+		action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
+	}
+	instancedata = NULL;
 	free(uniquestring);
+	uniquestring = NULL;
+	free(currentframeimagehandle);
+	currentframeimagehandle = NULL;
+	free(outputimagehandle);
+	outputimagehandle = NULL;
+	for(int i = 0; i < 11; i++) {
+		free(temporalframeimagehandles[i]);
+		temporalframeimagehandles[i] = NULL;
+	}
+
+	if(plugin != NULL) {
+		action(kOfxActionUnload, NULL, NULL, NULL);
+	}
+	plugin = NULL;
+
+	int r = dlclose(dlhandle);
+	if(r == 0) {
+		printf("Ofxwrap: dlclose() ok\n");
+		dlhandle = NULL;
+	} else {
+		printf("Ofxwrap: dlclose() failed! Reason: %s\n", dlerror());
+	}
 }
 
 int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
@@ -297,6 +329,9 @@ int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
 
 void SparkEvent(SparkModuleEvent e) {
 	printf("Ofxwrap: in SparkEvent(), event is %d, last setup name is %s\n", (int)e, sparkGetLastSetupName());
+	if(e == SPARK_EVENT_RESULT) {
+		sparkReprocess();
+	}
 }
 
 void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
