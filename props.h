@@ -103,7 +103,21 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 		return kOfxStatOK;
 	}
 	if(strcmp(property, kOfxImageEffectPropPixelDepth) == 0) {
-		*value = (char *) kOfxBitDepthFloat;
+		switch(sparkdepth) {
+			case SPARKBUF_RGB_24_3x8:
+				*value = (char *) kOfxBitDepthByte;
+			break;
+			case SPARKBUF_RGB_48_3x10:
+			case SPARKBUF_RGB_48_3x12:
+				*value = (char *) kOfxBitDepthShort;
+			break;
+			case SPARKBUF_RGB_48_3x16_FP:
+				*value = (char *) kOfxBitDepthFloat;
+			break;
+			default:
+				printf("Ofxwrap: in props_GetString(), unhandled pixel depth %d, failing!\n", sparkdepth);
+				return kOfxStatFailed;
+		}
 		printf("Ofxwrap: in props_GetString(), asked for pixel depth, returned %s\n", *value);
 		return kOfxStatOK;
 	}

@@ -29,6 +29,7 @@ OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) NULL;
 OfxPropertySetHandle temporalframeimagehandles[11];
 OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
 void *instancedata = NULL;
+SparkPixelFormat sparkdepth;
 double sparktime = 0.0;
 int sparkw = 0;
 int sparkh = 0;
@@ -238,6 +239,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	}
 
 	sparktime = si.FrameNo;
+
+	// If the resolution changes, we're gonna have a bad time here...
 	sparkw = front.BufWidth;
 	sparkh = front.BufHeight;
 
@@ -323,11 +326,8 @@ void SparkUnInitialise(SparkInfoStruct si) {
 }
 
 int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
-	if(fmt == SPARKBUF_RGB_48_3x16_FP) {
-		return 1;
-	} else {
-		return 0;
-	}
+	sparkdepth = fmt;
+	return 1;
 }
 
 void SparkEvent(SparkModuleEvent e) {
