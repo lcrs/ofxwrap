@@ -399,6 +399,12 @@ void SparkUnInitialise(SparkInfoStruct si) {
 	} else {
 		printf("Ofxwrap: dlclose() failed! Reason: %s\n", dlerror());
 	}
+
+	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
+	if(d != NULL) {
+		printf("Ofxwrap: plugin semms to still be linked after dlclose()!\n");
+	}
+	dlclose(d);
 }
 
 int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
