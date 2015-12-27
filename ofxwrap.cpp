@@ -150,10 +150,6 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 
 	uniquestring = (char *) malloc(100);
 
-	if(plugin != NULL) {
-		printf("Ofxwrap: plugin is already alive!\n");
-	}
-
 	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
 	if(d != NULL) {
 		printf("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
@@ -194,7 +190,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	h.fetchSuite = &fetchSuite;
 	plugin->setHost(&h);
 
-	if(needsload) action(kOfxActionLoad, NULL, NULL, NULL);
+	action(kOfxActionLoad, NULL, NULL, NULL);
 
 	action(kOfxActionDescribe, imageeffecthandle, NULL, NULL);
 
@@ -243,9 +239,9 @@ void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
 void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned short *)(in + stride * y + inc * x + 0) / 65536.0;
-			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned short *)(in + stride * y + inc * x + 2) / 65536.0;
-			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned short *)(in + stride * y + inc * x + 4) / 65536.0;
+			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned short *)(in + stride * y + inc * x + 0) / 65535.0;
+			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned short *)(in + stride * y + inc * x + 2) / 65535.0;
+			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned short *)(in + stride * y + inc * x + 4) / 65535.0;
 			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
 		}
 	}
@@ -254,12 +250,17 @@ void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 void rgb8int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned char *)(in + stride * y + inc * x + 0) / 256.0;
-			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned char *)(in + stride * y + inc * x + 1) / 256.0;
-			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned char *)(in + stride * y + inc * x + 2) / 256.0;
+			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned char *)(in + stride * y + inc * x + 0) / 255.0;
+			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned char *)(in + stride * y + inc * x + 1) / 255.0;
+			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned char *)(in + stride * y + inc * x + 2) / 255.0;
 			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
 		}
 	}
+}
+
+float clamp(float d, float min, float max) {
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
 }
 
 unsigned long *SparkProcess(SparkInfoStruct si) {
@@ -277,6 +278,7 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	// If the resolution changes, we're gonna have a bad time here...
 	sparkw = front.BufWidth;
 	sparkh = front.BufHeight;
+	sparkdepth = (SparkPixelFormat) front.BufDepth;
 
 	// Let's be very clear here about which frame is in which buffer
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime - 5, temporalbuffers[0].Buffer);
@@ -362,18 +364,18 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		case SPARKBUF_RGB_48_3x12:
 			for(int x = 0; x < sparkw; x++) {
 				for(int y = 0; y < sparkh; y++) {
-					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0] * 65535.0;
-					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1] * 65535.0;
-					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2] * 65535.0;
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 0) = clamp(oih[y * sparkw * 4 + x * 4 + 0], 0, 1) * 65535.0;
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 2) = clamp(oih[y * sparkw * 4 + x * 4 + 1], 0, 1) * 65535.0;
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 4) = clamp(oih[y * sparkw * 4 + x * 4 + 2], 0, 1) * 65535.0;
 				}
 			}
 		break;
 		case SPARKBUF_RGB_24_3x8:
 			for(int x = 0; x < sparkw; x++) {
 				for(int y = 0; y < sparkh; y++) {
-					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0] * 255.0;
-					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 1) = oih[y * sparkw * 4 + x * 4 + 1] * 255.0;
-					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 2] * 255.0;
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 0) = clamp(oih[y * sparkw * 4 + x * 4 + 0], 0, 1) * 255.0;
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 1) = clamp(oih[y * sparkw * 4 + x * 4 + 1], 0, 1) * 255.0;
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 2) = clamp(oih[y * sparkw * 4 + x * 4 + 2], 0, 1) * 255.0;
 				}
 			}
 		break;
@@ -387,7 +389,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 
-	action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
+	if(instancehandle != NULL) action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
+	instancehandle = NULL;
 	instancedata = NULL;
 	free(uniquestring);
 	uniquestring = NULL;
@@ -419,8 +422,17 @@ void SparkUnInitialise(SparkInfoStruct si) {
 }
 
 int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
-	sparkdepth = fmt;
-	return 1;
+	switch(fmt) {
+		case SPARKBUF_RGB_24_3x8:
+		case SPARKBUF_RGB_48_3x10:
+		case SPARKBUF_RGB_48_3x12:
+		case SPARKBUF_RGB_48_3x16_FP:
+			return 1;
+		break;
+		default:
+			printf("Ofxwrap: SparkIsInputFormatSupported(), unhandled pixel depth %d, failing!\n", fmt);
+			return 0;
+	}
 }
 
 void SparkEvent(SparkModuleEvent e) {
