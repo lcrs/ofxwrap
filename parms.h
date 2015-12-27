@@ -5,7 +5,34 @@ OfxStatus parms_Define(OfxParamSetHandle paramSet, const char *paramType, const 
 
 OfxStatus parms_GetHandle(OfxParamSetHandle paramSet, const char *name, OfxParamHandle *param, OfxPropertySetHandle *propertySet) {
   printf("Ofxwrap: in parms_GetHandle(), parm set handle is %p, name is %s, parm handle is %p, prop set handle is %p\n", paramSet, name, param, propertySet);
-	return kOfxStatOK;
+  if(strcmp(name, "DNP") == 0) {
+    *param = dnp;
+    printf("Ofxwrap: in parms_GetHandle(): returning DNP param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else if(strcmp(name, "NFP") == 0) {
+    *param = nfp;
+    printf("Ofxwrap: in parms_GetHandle(): returning NFP param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else if(strcmp(name, "Adjust Spatial...") == 0) {
+    *param = adjustspatial;
+    printf("Ofxwrap: in parms_GetHandle(): returning adjustspatial param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else if(strcmp(name, "ParamsHash1") == 0) {
+    *param = paramshash1;
+    printf("Ofxwrap: in parms_GetHandle(): returning ParamsHash1 param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else if(strcmp(name, "ParamsHash2") == 0) {
+    *param = paramshash2;
+    printf("Ofxwrap: in parms_GetHandle(): returning ParamsHash2 param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else if(strcmp(name, "ParamsHash3") == 0) {
+    *param = paramshash3;
+    printf("Ofxwrap: in parms_GetHandle(): returning ParamsHash3 param handle %p\n", *param);
+  	return kOfxStatOK;
+  } else {
+    printf("Ofxwrap: in parms_GetHandle(): unhandled param! %s\n", name);
+    return kOfxStatFailed;
+  }
 }
 
 OfxStatus parms_SetGetPropertySet(OfxParamSetHandle paramSet, OfxPropertySetHandle *propHandle) {
@@ -40,6 +67,7 @@ OfxStatus parms_GetIntegral(OfxParamHandle paramHandle, OfxTime time1, OfxTime t
 
 OfxStatus parms_SetValue(OfxParamHandle paramHandle, ...) {
   printf("Ofxwrap: in parms_SetValue(), parm handle is %p\n", paramHandle);
+  // Ohhh noooo, varargs :(
 	return kOfxStatOK;
 }
 

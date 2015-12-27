@@ -8,14 +8,13 @@
 #include "openfx/include/ofxParam.h"
 #include "openfx/include/ofxDialog.h"
 
-int needsload = 0;
 void *dlhandle = NULL;
 OfxHost h;
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
 OfxPropertySetHandle describeincontextpropsethandle = (OfxPropertySetHandle) "describeincontextprops";
-OfxImageEffectHandle instancehandle = (OfxImageEffectHandle) "instance";
+OfxImageEffectHandle instancehandle = NULL;
 OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
 OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
 OfxPropertySetHandle begininstancechangepropsethandle = (OfxPropertySetHandle) "begininstancechangeprops";
@@ -29,6 +28,15 @@ OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputcli
 OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) NULL;
 OfxPropertySetHandle temporalframeimagehandles[11];
 OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
+OfxParamSetHandle describeincontextparams = (OfxParamSetHandle) "describeincontextparams";
+OfxParamSetHandle instanceparams = (OfxParamSetHandle) "instanceparams";
+OfxParamHandle dnp = (OfxParamHandle) "DNP";
+OfxParamHandle nfp = (OfxParamHandle) "NFP";
+OfxParamHandle adjustspatial = (OfxParamHandle) "Adjust Spatial...";
+OfxParamHandle paramshash1 = (OfxParamHandle) "ParamsHash1";
+OfxParamHandle paramshash2 = (OfxParamHandle) "ParamsHash2";
+OfxParamHandle paramshash3 = (OfxParamHandle) "ParamsHash3";
+
 void *instancedata = NULL;
 SparkPixelFormat sparkdepth;
 int sparkstride = 0;
@@ -154,14 +162,12 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	if(d != NULL) {
 		printf("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
 		dlhandle = d;
-		needsload = 0;
 	} else {
 		dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 		if(dlhandle == NULL) {
 			die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
 			return 0;
 		}
-		needsload = 1;
 	}
 
 	int (*OfxGetNumberOfPlugins)(void);

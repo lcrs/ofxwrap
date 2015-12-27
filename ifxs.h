@@ -10,7 +10,18 @@ OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHa
 }
 OfxStatus ifxs_getParamSet(OfxImageEffectHandle imageEffect, OfxParamSetHandle *paramSet) {
 	printf("Ofxwrap: in ifxs_getParamSet(), effect handle is %p, param set handle is %p\n", imageEffect, paramSet);
-	return kOfxStatOK;
+	if(imageEffect == instancehandle) {
+		*paramSet = instanceparams;
+		printf("Ofxwrap: in ifxs_getParamSet(), effect is the instance, returning params %p\n", *paramSet);
+		return kOfxStatOK;
+	} else if(imageEffect == imageeffecthandle) {
+		*paramSet = describeincontextparams;
+		printf("Ofxwrap: in ifxs_getParamSet(), effect is the describer, returning params %p\n", *paramSet);
+		return kOfxStatOK;
+	} else {
+		printf("Ofxwrap: in ifxs_getParamSet(), asked about an effect handle we don't know!\n");
+		return kOfxStatFailed;
+	}
 }
 
 OfxStatus ifxs_clipDefine(OfxImageEffectHandle imageEffect, const char *name, OfxPropertySetHandle *propertySet) {
