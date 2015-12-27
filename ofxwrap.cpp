@@ -397,7 +397,10 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 void SparkUnInitialise(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 
-	if(instancehandle != NULL) action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
+	// Gonna have to just leak instances here
+	// Calling this destroy action causes the plugin to try to access things
+	// from other instances which may no longer exist, probably the host struct stuff
+	// if(instancehandle != NULL) action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
 	instancehandle = NULL;
 	instancedata = NULL;
 	free(uniquestring);
