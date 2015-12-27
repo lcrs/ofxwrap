@@ -8,6 +8,7 @@
 #include "openfx/include/ofxParam.h"
 #include "openfx/include/ofxDialog.h"
 
+int needsload = 0;
 void *dlhandle = NULL;
 OfxHost h;
 OfxPlugin *plugin = NULL;
@@ -150,13 +151,21 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	uniquestring = (char *) malloc(100);
 
 	if(plugin != NULL) {
-		printf("Ofxwrap: plugin is already alive, probable multiple instance situation!\n");
+		printf("Ofxwrap: plugin is already alive!\n");
 	}
 
-	dlhandle = dlopen(PLUGIN, RTLD_LAZY);
-	if(dlhandle == NULL) {
-		die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
-		return 0;
+	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
+	if(d != NULL) {
+		printf("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
+		dlhandle = d;
+		needsload = 0;
+	} else {
+		dlhandle = dlopen(PLUGIN, RTLD_LAZY);
+		if(dlhandle == NULL) {
+			die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
+			return 0;
+		}
+		needsload = 1;
 	}
 
 	int (*OfxGetNumberOfPlugins)(void);
@@ -184,7 +193,9 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	h.host = hostpropsethandle;
 	h.fetchSuite = &fetchSuite;
 	plugin->setHost(&h);
-	action(kOfxActionLoad, NULL, NULL, NULL);
+
+	if(needsload) action(kOfxActionLoad, NULL, NULL, NULL);
+
 	action(kOfxActionDescribe, imageeffecthandle, NULL, NULL);
 
 	// Crashes inside the plugin binary unless we do this :( Could be looking for
@@ -389,8 +400,8 @@ void SparkUnInitialise(SparkInfoStruct si) {
 		temporalframeimagehandles[i] = NULL;
 	}
 
-	action(kOfxActionUnload, NULL, NULL, NULL);
-	plugin = NULL;
+	// We can't do this because other instances of the Spark may be alive still
+	// action(kOfxActionUnload, NULL, NULL, NULL);
 
 	int r = dlclose(dlhandle);
 	if(r == 0) {
