@@ -232,9 +232,9 @@ void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
 void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			out[y * sparkw * 4 + x * 4 + 0] = *(short *)(in + stride * y + inc * x + 0);
-			out[y * sparkw * 4 + x * 4 + 1] = *(short *)(in + stride * y + inc * x + 2);
-			out[y * sparkw * 4 + x * 4 + 2] = *(short *)(in + stride * y + inc * x + 4);
+			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned short *)(in + stride * y + inc * x + 0) / 65536.0;
+			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned short *)(in + stride * y + inc * x + 2) / 65536.0;
+			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned short *)(in + stride * y + inc * x + 4) / 65536.0;
 			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
 		}
 	}
@@ -243,9 +243,9 @@ void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 void rgb8int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 	for(int x = 0; x < sparkw; x++) {
 		for(int y = 0; y < sparkh; y++) {
-			out[y * sparkw * 4 + x * 4 + 0] = *(in + stride * y + inc * x + 0);
-			out[y * sparkw * 4 + x * 4 + 1] = *(in + stride * y + inc * x + 1);
-			out[y * sparkw * 4 + x * 4 + 2] = *(in + stride * y + inc * x + 2);
+			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned char *)(in + stride * y + inc * x + 0) / 256.0;
+			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned char *)(in + stride * y + inc * x + 1) / 256.0;
+			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned char *)(in + stride * y + inc * x + 2) / 256.0;
 			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
 		}
 	}
@@ -291,11 +291,11 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		case SPARKBUF_RGB_48_3x10:
 		case SPARKBUF_RGB_48_3x12:
 			rgb16int_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
-			sparkstride = sparkw * 4 * 2;
+			sparkstride = sparkw * 4 * 4;
 		break;
 		case SPARKBUF_RGB_24_3x8:
 			rgb8int_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
-			sparkstride = sparkw * 4 * 1;
+			sparkstride = sparkw * 4 * 4;
 		break;
 		default:
 			die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
@@ -315,10 +315,10 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 			break;
 			case SPARKBUF_RGB_48_3x10:
 			case SPARKBUF_RGB_48_3x12:
-				rgb16fp_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
+				rgb16int_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
 			break;
 			case SPARKBUF_RGB_24_3x8:
-				rgb16fp_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
+				rgb8int_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
 			break;
 			default:
 				die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
@@ -351,18 +351,18 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		case SPARKBUF_RGB_48_3x12:
 			for(int x = 0; x < sparkw; x++) {
 				for(int y = 0; y < sparkh; y++) {
-					*(short *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
-					*(short *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1];
-					*(short *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2];
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0] * 65535.0;
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1] * 65535.0;
+					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2] * 65535.0;
 				}
 			}
 		break;
 		case SPARKBUF_RGB_24_3x8:
 			for(int x = 0; x < sparkw; x++) {
 				for(int y = 0; y < sparkh; y++) {
-					*(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
-					*(rb + result.Stride * y + result.Inc * x + 1) = oih[y * sparkw * 4 + x * 4 + 1];
-					*(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 2];
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0] * 255.0;
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 1) = oih[y * sparkw * 4 + x * 4 + 1] * 255.0;
+					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 2] * 255.0;
 				}
 			}
 		break;

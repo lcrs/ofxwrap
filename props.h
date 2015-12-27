@@ -105,12 +105,8 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 	if(strcmp(property, kOfxImageEffectPropPixelDepth) == 0) {
 		switch(sparkdepth) {
 			case SPARKBUF_RGB_24_3x8:
-				*value = (char *) kOfxBitDepthByte;
-			break;
 			case SPARKBUF_RGB_48_3x10:
 			case SPARKBUF_RGB_48_3x12:
-				*value = (char *) kOfxBitDepthShort;
-			break;
 			case SPARKBUF_RGB_48_3x16_FP:
 				*value = (char *) kOfxBitDepthFloat;
 			break;
