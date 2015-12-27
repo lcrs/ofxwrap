@@ -201,6 +201,8 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	setuid(realuid);
 
 	action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
+
+	instancehandle = (OfxImageEffectHandle) "instance";
 	action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
 
 	// Back to normal please
@@ -444,6 +446,12 @@ void SparkEvent(SparkModuleEvent e) {
 
 void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 	printf("Ofxwrap: in SparkIOEvent(), event is %d, path is %s, file is %s\n", (int)e, path, file);
+	if(e == SPARK_EVENT_SAVESETUP) {
+		if(instancehandle == NULL) return;
+			action(kOfxActionSyncPrivateData, instancehandle, NULL, NULL);
+	} else if(e == SPARK_EVENT_LOADSETUP) {
+		//hmm
+	}
 }
 
 unsigned long *prepare(int what, SparkInfoStruct si) {
