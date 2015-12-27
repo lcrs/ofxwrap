@@ -229,6 +229,28 @@ void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
 	}
 }
 
+void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
+	for(int x = 0; x < sparkw; x++) {
+		for(int y = 0; y < sparkh; y++) {
+			out[y * sparkw * 4 + x * 4 + 0] = *(short *)(in + stride * y + inc * x + 0);
+			out[y * sparkw * 4 + x * 4 + 1] = *(short *)(in + stride * y + inc * x + 2);
+			out[y * sparkw * 4 + x * 4 + 2] = *(short *)(in + stride * y + inc * x + 4);
+			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
+		}
+	}
+}
+
+void rgb8int_to_rgba32fp(char *in, int stride, int inc, float *out) {
+	for(int x = 0; x < sparkw; x++) {
+		for(int y = 0; y < sparkh; y++) {
+			out[y * sparkw * 4 + x * 4 + 0] = *(in + stride * y + inc * x + 0);
+			out[y * sparkw * 4 + x * 4 + 1] = *(in + stride * y + inc * x + 1);
+			out[y * sparkw * 4 + x * 4 + 2] = *(in + stride * y + inc * x + 2);
+			out[y * sparkw * 4 + x * 4 + 3] = 1.0;
+		}
+	}
+}
+
 unsigned long *SparkProcess(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
 
@@ -258,38 +280,54 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 5, temporalbuffers[9].Buffer);
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 6, temporalbuffers[10].Buffer);
 
-	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
-		if(currentframeimagehandle == NULL) {
-			currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
-		}
-		rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
-		sparkstride = sparkw * 4 * 4;
-	} else {
-		currentframeimagehandle = (OfxPropertySetHandle) front.Buffer;
-		sparkstride = front.Stride;
+	if(currentframeimagehandle == NULL) {
+		currentframeimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+	}
+	switch(sparkdepth) {
+		case SPARKBUF_RGB_48_3x16_FP:
+			rgb16fp_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
+			sparkstride = sparkw * 4 * 4;
+		break;
+		case SPARKBUF_RGB_48_3x10:
+		case SPARKBUF_RGB_48_3x12:
+			rgb16int_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
+			sparkstride = sparkw * 4 * 2;
+		break;
+		case SPARKBUF_RGB_24_3x8:
+			rgb8int_to_rgba32fp((char *)front.Buffer, front.Stride, front.Inc, (float *)currentframeimagehandle);
+			sparkstride = sparkw * 4 * 1;
+		break;
+		default:
+			die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
 	}
 	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
 	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
 
 	for(int i = 0; i < 11; i++) {
-		if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
-			if(temporalframeimagehandles[i] == NULL) {
-				temporalframeimagehandles[i] = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
-			}
-			rgb16fp_to_rgba32fp((char *)temporalbuffers[i].Buffer, temporalbuffers[i].Stride, temporalbuffers[i].Inc, (float *)temporalframeimagehandles[i]);
-		} else {
-			temporalframeimagehandles[i] = (OfxPropertySetHandle) temporalbuffers[i].Buffer;
+		OfxPropertySetHandle *h = &temporalframeimagehandles[i];
+		SparkMemBufStruct *b = &temporalbuffers[i];
+		if(*h == NULL) {
+			*h = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
+		}
+		switch(sparkdepth) {
+			case SPARKBUF_RGB_48_3x16_FP:
+				rgb16fp_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
+			break;
+			case SPARKBUF_RGB_48_3x10:
+			case SPARKBUF_RGB_48_3x12:
+				rgb16fp_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
+			break;
+			case SPARKBUF_RGB_24_3x8:
+				rgb16fp_to_rgba32fp((char *)b->Buffer, b->Stride, b->Inc, (float *)*h);
+			break;
+			default:
+				die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
 		}
 	}
 
-	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
-		if(outputimagehandle == NULL) {
-			outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
-		}
-	} else {
-		outputimagehandle = (OfxPropertySetHandle) result.Buffer;
+	if(outputimagehandle == NULL) {
+		outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
 	}
-	float *outputframe = (float *) outputimagehandle;
 	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
 	printf("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
 
@@ -297,17 +335,39 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	action(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
 	action(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 
-	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
-		// Convert 32-bit RGBA float to 16-bit RGB half
-		void *rbuf;
-		rbuf = result.Buffer;
-		for(int x = 0; x < sparkw; x++) {
-			for(int y = 0; y < sparkh; y++) {
-				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 0)) = outputframe[y * sparkw * 4 + x * 4 + 0];
-				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 2)) = outputframe[y * sparkw * 4 + x * 4 + 1];
-				*((half *) (((char *)rbuf) + result.Stride * y + result.Inc * x + 4)) = outputframe[y * sparkw * 4 + x * 4 + 2];
+	char *rb = (char *) result.Buffer;
+	float *oih = (float *) outputimagehandle;
+	switch(sparkdepth) {
+		case SPARKBUF_RGB_48_3x16_FP:
+			for(int x = 0; x < sparkw; x++) {
+				for(int y = 0; y < sparkh; y++) {
+					*(half *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
+					*(half *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1];
+					*(half *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2];
+				}
 			}
-		}
+		break;
+		case SPARKBUF_RGB_48_3x10:
+		case SPARKBUF_RGB_48_3x12:
+			for(int x = 0; x < sparkw; x++) {
+				for(int y = 0; y < sparkh; y++) {
+					*(short *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
+					*(short *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1];
+					*(short *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2];
+				}
+			}
+		break;
+		case SPARKBUF_RGB_24_3x8:
+			for(int x = 0; x < sparkw; x++) {
+				for(int y = 0; y < sparkh; y++) {
+					*(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
+					*(rb + result.Stride * y + result.Inc * x + 1) = oih[y * sparkw * 4 + x * 4 + 1];
+					*(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 2];
+				}
+			}
+		break;
+		default:
+			die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
 	}
 
 	return(result.Buffer);
@@ -320,15 +380,13 @@ void SparkUnInitialise(SparkInfoStruct si) {
 	instancedata = NULL;
 	free(uniquestring);
 	uniquestring = NULL;
-	if(sparkdepth == SPARKBUF_RGB_48_3x16_FP) {
-		free(currentframeimagehandle);
-		currentframeimagehandle = NULL;
-		free(outputimagehandle);
-		outputimagehandle = NULL;
-		for(int i = 0; i < 11; i++) {
-			free(temporalframeimagehandles[i]);
-			temporalframeimagehandles[i] = NULL;
-		}
+	free(currentframeimagehandle);
+	currentframeimagehandle = NULL;
+	free(outputimagehandle);
+	outputimagehandle = NULL;
+	for(int i = 0; i < 11; i++) {
+		free(temporalframeimagehandles[i]);
+		temporalframeimagehandles[i] = NULL;
 	}
 
 	action(kOfxActionUnload, NULL, NULL, NULL);
