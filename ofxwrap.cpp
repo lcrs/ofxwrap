@@ -1,6 +1,7 @@
 #include "half.h"
 #include <dlfcn.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include "spark.h"
 #include "openfx/include/ofxCore.h"
 #include "openfx/include/ofxProperty.h"

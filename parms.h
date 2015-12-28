@@ -67,7 +67,27 @@ OfxStatus parms_GetIntegral(OfxParamHandle paramHandle, OfxTime time1, OfxTime t
 
 OfxStatus parms_SetValue(OfxParamHandle paramHandle, ...) {
   printf("Ofxwrap: in parms_SetValue(), parm handle is %p\n", paramHandle);
-  // Ohhh noooo, varargs :(
+
+  va_list ap;
+  va_start(ap, paramHandle);
+  if(paramHandle == dnp) {
+    char *s = va_arg(ap, char *);
+    printf("Ofxwrap: in parms_SetValue(), parm handle is dnp, arg is %s\n", s);
+  } else if(paramHandle == nfp) {
+    char *s = va_arg(ap, char *);
+    printf("Ofxwrap: in parms_SetValue(), parm handle is nfp, arg is %s\n", s);
+  } else if(paramHandle == paramshash1) {
+    int s = va_arg(ap, int);
+    printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash1, arg is %d\n", s);
+  } else if(paramHandle == paramshash2) {
+    int s = va_arg(ap, int);
+    printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash2, arg is %d\n", s);
+  } else if(paramHandle == paramshash3) {
+    int s = va_arg(ap, int);
+    printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash3, arg is %d\n", s);
+  }
+  va_end(ap);
+
 	return kOfxStatOK;
 }
 
