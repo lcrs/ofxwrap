@@ -136,6 +136,7 @@ void die(const char *format, const char *arg) {
 	sprintf(m, format, arg);
 	printf("%s", m);
 	sparkError(m);
+	sparkProcessAbort();
 	free(m);
 }
 
@@ -508,7 +509,9 @@ void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 		action(kOfxActionEndInstanceChanged, instancehandle, endinstancechangepropsethandle, NULL); */
 
 		// So just create a new instance, which will read the current state
-		createinstance();
+		if(plugin != NULL) {
+			createinstance();
+		}
 	}
 }
 
