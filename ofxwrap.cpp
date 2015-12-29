@@ -265,9 +265,10 @@ void SparkMemoryTempBuffers(void) {
 	say("Ofxwrap: ...done with SparkMemoryTempBuffers()\n");
 }
 
+// These loops are screaming out to be threaded via sparkMpFork()
 void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
-	for(int x = 0; x < sparkw; x++) {
-		for(int y = 0; y < sparkh; y++) {
+	for(int y = 0; y < sparkh; y++) {
+		for(int x = 0; x < sparkw; x++) {
 			out[y * sparkw * 4 + x * 4 + 0] = *(half *)(in + stride * y + inc * x + 0);
 			out[y * sparkw * 4 + x * 4 + 1] = *(half *)(in + stride * y + inc * x + 2);
 			out[y * sparkw * 4 + x * 4 + 2] = *(half *)(in + stride * y + inc * x + 4);
@@ -277,8 +278,8 @@ void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
 }
 
 void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
-	for(int x = 0; x < sparkw; x++) {
-		for(int y = 0; y < sparkh; y++) {
+	for(int y = 0; y < sparkh; y++) {
+		for(int x = 0; x < sparkw; x++) {
 			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned short *)(in + stride * y + inc * x + 0) / 65535.0;
 			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned short *)(in + stride * y + inc * x + 2) / 65535.0;
 			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned short *)(in + stride * y + inc * x + 4) / 65535.0;
@@ -288,8 +289,8 @@ void rgb16int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 }
 
 void rgb8int_to_rgba32fp(char *in, int stride, int inc, float *out) {
-	for(int x = 0; x < sparkw; x++) {
-		for(int y = 0; y < sparkh; y++) {
+	for(int y = 0; y < sparkh; y++) {
+		for(int x = 0; x < sparkw; x++) {
 			out[y * sparkw * 4 + x * 4 + 0] = *(unsigned char *)(in + stride * y + inc * x + 0) / 255.0;
 			out[y * sparkw * 4 + x * 4 + 1] = *(unsigned char *)(in + stride * y + inc * x + 1) / 255.0;
 			out[y * sparkw * 4 + x * 4 + 2] = *(unsigned char *)(in + stride * y + inc * x + 2) / 255.0;
@@ -394,12 +395,13 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	action(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
 	action(kOfxImageEffectActionEndSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 
+	// Again, should be doable via sparkMpFork()
 	char *rb = (char *) result.Buffer;
 	float *oih = (float *) outputimagehandle;
 	switch(sparkdepth) {
 		case SPARKBUF_RGB_48_3x16_FP:
-			for(int x = 0; x < sparkw; x++) {
-				for(int y = 0; y < sparkh; y++) {
+			for(int y = 0; y < sparkh; y++) {
+				for(int x = 0; x < sparkw; x++) {
 					*(half *)(rb + result.Stride * y + result.Inc * x + 0) = oih[y * sparkw * 4 + x * 4 + 0];
 					*(half *)(rb + result.Stride * y + result.Inc * x + 2) = oih[y * sparkw * 4 + x * 4 + 1];
 					*(half *)(rb + result.Stride * y + result.Inc * x + 4) = oih[y * sparkw * 4 + x * 4 + 2];
@@ -408,8 +410,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		break;
 		case SPARKBUF_RGB_48_3x10:
 		case SPARKBUF_RGB_48_3x12:
-			for(int x = 0; x < sparkw; x++) {
-				for(int y = 0; y < sparkh; y++) {
+			for(int y = 0; y < sparkh; y++) {
+				for(int x = 0; x < sparkw; x++) {
 					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 0) = clamp(oih[y * sparkw * 4 + x * 4 + 0], 0, 1) * 65535.0;
 					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 2) = clamp(oih[y * sparkw * 4 + x * 4 + 1], 0, 1) * 65535.0;
 					*(unsigned short *)(rb + result.Stride * y + result.Inc * x + 4) = clamp(oih[y * sparkw * 4 + x * 4 + 2], 0, 1) * 65535.0;
@@ -417,8 +419,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 			}
 		break;
 		case SPARKBUF_RGB_24_3x8:
-			for(int x = 0; x < sparkw; x++) {
-				for(int y = 0; y < sparkh; y++) {
+			for(int y = 0; y < sparkh; y++) {
+				for(int x = 0; x < sparkw; x++) {
 					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 0) = clamp(oih[y * sparkw * 4 + x * 4 + 0], 0, 1) * 255.0;
 					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 1) = clamp(oih[y * sparkw * 4 + x * 4 + 1], 0, 1) * 255.0;
 					*(unsigned char *)(rb + result.Stride * y + result.Inc * x + 2) = clamp(oih[y * sparkw * 4 + x * 4 + 2], 0, 1) * 255.0;
