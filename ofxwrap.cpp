@@ -52,6 +52,7 @@ int temporalids[11];
 #include "dialogs.h"
 #include "ifxs.h"
 #include "parms.h"
+#include "setups.h"
 
 #ifdef __APPLE__
 	#define PLUGIN "/Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx"
@@ -458,9 +459,10 @@ void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 	printf("Ofxwrap: in SparkIOEvent(), event is %d, path is %s, file is %s\n", (int)e, path, file);
 	if(e == SPARK_EVENT_SAVESETUP) {
 		if(instancehandle == NULL) return;
-			action(kOfxActionSyncPrivateData, instancehandle, NULL, NULL);
+		action(kOfxActionSyncPrivateData, instancehandle, NULL, NULL);
+		setups_save(path, file);
 	} else if(e == SPARK_EVENT_LOADSETUP) {
-		//hmm
+		setups_load(path, file);
 	}
 }
 
