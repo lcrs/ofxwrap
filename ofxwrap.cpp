@@ -67,6 +67,9 @@ long uniqueid = 0;
 char *uniquestring = NULL;
 int temporalids[11];
 
+#define say if(debug) printf
+int debug = 0;
+
 #include "props.h"
 #include "dialogs.h"
 #include "ifxs.h"
@@ -108,7 +111,7 @@ SparkPushStruct SparkPush10 = {
 };
 
 const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version) {
-	printf("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
+	say("Ofxwrap: fetchSuite() asked for suite %s version %d\n", suite, version);
 	if(strcmp(suite, kOfxPropertySuite) == 0) {
 		props_init();
 		return (const void *)&props;
@@ -143,10 +146,10 @@ void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxP
 	OfxStatus s = plugin->mainEntry(a, e, in, out);
 	switch(s) {
 		case kOfxStatOK:
-			printf("Ofxwrap: %s: ok\n", a);
+			say("Ofxwrap: %s: ok\n", a);
 			break;
 		case kOfxStatReplyDefault:
-			printf("Ofxwrap: %s: take default action\n", a);
+			say("Ofxwrap: %s: take default action\n", a);
 			break;
 		case kOfxStatFailed:
 			die("Ofxwrap: %s: failed!\n", a);
@@ -158,30 +161,50 @@ void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxP
 			die("Ofxwrap: %s: missing feature!\n", a);
 			break;
 		default:
-			printf("Ofxwrap: %s: returned %d\n", a, s);
+			say("Ofxwrap: %s: returned %d\n", a, s);
 	}
 }
 
 int bufferReady(int id, SparkMemBufStruct *b) {
 	if(!sparkMemGetBuffer(id, b)) {
-		printf("Ofxwrap: Failed to get buffer %d\n", id);
+		say("Ofxwrap: Failed to get buffer %d\n", id);
 		return 0;
 	}
 	if(!(b->BufState & MEMBUF_LOCKED)) {
-		printf("Ofxwrap: Failed to lock buffer %d\n", id);
+		say("Ofxwrap: Failed to lock buffer %d\n", id);
 		return 0;
 	}
 	return 1;
 }
 
+void createinstance(void) {
+	// Crashes inside the plugin binary unless we do this :( Could be looking for
+	// a user prefs folder and getting confused by Flame's real/effective uid mismatch
+	int realuid = getuid();
+	int effectiveuid = geteuid();
+	setuid(realuid);
+
+	action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
+
+	instancehandle = (OfxImageEffectHandle) "instance";
+	action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
+
+	// Back to normal please
+	setuid(effectiveuid);
+
+	action(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
+}
+
 unsigned int SparkInitialise(SparkInfoStruct si) {
-	printf("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
+	if(getenv("OFXWRAP_DEBUG")) debug = 1;
+
+	say("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
 
 	uniquestring = (char *) malloc(100);
 
 	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
 	if(d != NULL) {
-		printf("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
+		say("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
 		dlhandle = d;
 	} else {
 		dlclose(d);
@@ -199,7 +222,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 		return 0;
 	}
 	int numplugs = (*OfxGetNumberOfPlugins)();
-	printf("Ofxwrap: found %d plugins\n", numplugs);
+	say("Ofxwrap: found %d plugins\n", numplugs);
 
 	OfxPlugin *(*OfxGetPlugin)(int nth);
 	OfxGetPlugin = (OfxPlugin*(*)(int nth)) dlsym(dlhandle, "OfxGetPlugin");
@@ -212,31 +235,15 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 		die("Ofxwrap: failed to get first plugin!\n", NULL);
 		return 0;
 	}
-	printf("Ofxwrap: plugin id is %s\n", plugin->pluginIdentifier);
+	say("Ofxwrap: plugin id is %s\n", plugin->pluginIdentifier);
 
 	h.host = hostpropsethandle;
 	h.fetchSuite = &fetchSuite;
 	plugin->setHost(&h);
 
 	action(kOfxActionLoad, NULL, NULL, NULL);
-
 	action(kOfxActionDescribe, imageeffecthandle, NULL, NULL);
-
-	// Crashes inside the plugin binary unless we do this :( Could be looking for
-	// a user prefs folder and getting confused by Flame's real/effective uid mismatch
-	int realuid = getuid();
-	int effectiveuid = geteuid();
-	setuid(realuid);
-
-	action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
-
-	instancehandle = (OfxImageEffectHandle) "instance";
-	action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
-
-	// Back to normal please
-	setuid(effectiveuid);
-
-	action(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
+	createinstance();
 
 	return(SPARK_MODULE);
 }
@@ -246,13 +253,15 @@ int SparkClips(void) {
 }
 
 void SparkMemoryTempBuffers(void) {
-	printf("Ofxwrap: in SparkMemoryTempBuffers()...\n");
+	if(getenv("OFXWRAP_DEBUG")) debug = 1;
+
+	say("Ofxwrap: in SparkMemoryTempBuffers()...\n");
 	for(int i = 0; i < 11; i++) {
-		printf("Ofxwrap: index %d was %d, ", i, temporalids[i]);
+		say("Ofxwrap: index %d was %d, ", i, temporalids[i]);
 		temporalids[i] = sparkMemRegisterBuffer();
-		printf("now %d\n", temporalids[i]);
+		say("now %d\n", temporalids[i]);
 	}
-	printf("Ofxwrap: ...done with SparkMemoryTempBuffers()\n");
+	say("Ofxwrap: ...done with SparkMemoryTempBuffers()\n");
 }
 
 void rgb16fp_to_rgba32fp(char *in, int stride, int inc, float *out) {
@@ -294,12 +303,12 @@ float clamp(float d, float min, float max) {
 }
 
 unsigned long *SparkProcess(SparkInfoStruct si) {
-	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
+	say("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
 
 	if(dnp_data == NULL || nfp_data == NULL) {
-		printf("Ofxwrap: in SparkProcess(), DNP or NFP is null\n");
+		say("Ofxwrap: in SparkProcess(), DNP or NFP is null\n");
 	} else {
-		printf("Ofxwrap: in SparkProcess(), DNP %.10s, NFP %.10s, hashes %d %d %d\n", dnp_data, nfp_data, paramshash1_data, paramshash2_data, paramshash3_data);
+		say("Ofxwrap: in SparkProcess(), DNP %.10s, NFP %.10s, hashes %d %d %d\n", dnp_data, nfp_data, paramshash1_data, paramshash2_data, paramshash3_data);
 	}
 
 	SparkMemBufStruct result, front, temporalbuffers[11];
@@ -349,8 +358,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		default:
 			die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
 	}
-	printf("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
-	printf("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
+	say("Ofxwrap: in SparkProcess(), currentframe is %p\n", currentframeimagehandle);
+	say("Ofxwrap: in SparkProcess(), front buffer is %p\n", front.Buffer);
 
 	for(int i = 0; i < 11; i++) {
 		OfxPropertySetHandle *h = &temporalframeimagehandles[i];
@@ -377,8 +386,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	if(outputimagehandle == NULL) {
 		outputimagehandle = (OfxPropertySetHandle) malloc(sparkw * sparkh * 4 * 4);
 	}
-	printf("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
-	printf("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
+	say("Ofxwrap: in SparkProcess(), outputframe is %p\n", outputimagehandle);
+	say("Ofxwrap: in SparkProcess(), result buffer is %p\n", result.Buffer);
 
 	action(kOfxImageEffectActionBeginSequenceRender, instancehandle, beginseqpropsethandle, NULL);
 	action(kOfxImageEffectActionRender, instancehandle, renderpropsethandle, NULL);
@@ -423,12 +432,13 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 }
 
 void SparkUnInitialise(SparkInfoStruct si) {
-	printf("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
+	say("Ofxwrap: in SparkUnInitialise(), name is %s\n", si.Name);
 
 	// Gonna have to just leak instances here
 	// Calling this destroy action causes the plugin to try to access things
 	// from other instances which may no longer exist, probably the host struct stuff
 	// if(instancehandle != NULL) action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
+
 	instancehandle = NULL;
 	instancedata = NULL;
 	free(uniquestring); uniquestring = NULL;
@@ -445,15 +455,15 @@ void SparkUnInitialise(SparkInfoStruct si) {
 
 	int r = dlclose(dlhandle);
 	if(r == 0) {
-		printf("Ofxwrap: dlclose() ok\n");
+		say("Ofxwrap: dlclose() ok\n");
 		dlhandle = NULL;
 	} else {
-		printf("Ofxwrap: dlclose() failed! Reason: %s\n", dlerror());
+		say("Ofxwrap: dlclose() failed! Reason: %s\n", dlerror());
 	}
 
 	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
 	if(d != NULL) {
-		printf("Ofxwrap: plugin semms to still be linked after dlclose()!\n");
+		say("Ofxwrap: plugin semms to still be linked after dlclose()!\n");
 	}
 	dlclose(d);
 }
@@ -467,26 +477,27 @@ int SparkIsInputFormatSupported(SparkPixelFormat fmt) {
 			return 1;
 		break;
 		default:
-			printf("Ofxwrap: SparkIsInputFormatSupported(), unhandled pixel depth %d, failing!\n", fmt);
+			say("Ofxwrap: SparkIsInputFormatSupported(), unhandled pixel depth %d, failing!\n", fmt);
 			return 0;
 	}
 }
 
 void SparkEvent(SparkModuleEvent e) {
-	printf("Ofxwrap: in SparkEvent(), event is %d, last setup name is %s\n", (int)e, sparkGetLastSetupName());
+	say("Ofxwrap: in SparkEvent(), event is %d, last setup name is %s\n", (int)e, sparkGetLastSetupName());
 	if(e == SPARK_EVENT_RESULT) {
 		sparkReprocess();
 	}
 }
 
 void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
-	printf("Ofxwrap: in SparkIOEvent(), event is %d, path is %s, file is %s\n", (int)e, path, file);
+	say("Ofxwrap: in SparkIOEvent(), event is %d, path is %s, file is %s\n", (int)e, path, file);
 	if(e == SPARK_EVENT_SAVESETUP) {
 		if(instancehandle == NULL) return;
 		action(kOfxActionSyncPrivateData, instancehandle, NULL, NULL);
 		setups_save(path, file);
 	} else if(e == SPARK_EVENT_LOADSETUP) {
 		setups_load(path, file);
+
 		/* This worked for the filter page settings but not the noise profile, the change was ignored
 		action(kOfxActionBeginInstanceChanged, instancehandle, begininstancechangepropsethandle, NULL);
 		action(kOfxActionInstanceChanged, instancehandle, dnpchangepropsethandle, NULL);
@@ -497,22 +508,7 @@ void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 		action(kOfxActionEndInstanceChanged, instancehandle, endinstancechangepropsethandle, NULL); */
 
 		// So just create a new instance, which will read the current state
-
-		// Crashes inside the plugin binary unless we do this :( Could be looking for
-		// a user prefs folder and getting confused by Flame's real/effective uid mismatch
-		int realuid = getuid();
-		int effectiveuid = geteuid();
-		setuid(realuid);
-
-		action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
-
-		instancehandle = (OfxImageEffectHandle) "instance";
-		action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
-
-		// Back to normal please
-		setuid(effectiveuid);
-
-		action(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
+		createinstance();
 	}
 }
 
