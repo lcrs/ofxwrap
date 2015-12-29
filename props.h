@@ -131,7 +131,10 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 			return kOfxStatOK;
 		}
 	}
-	if(properties == begininstancechangepropsethandle || properties == endinstancechangepropsethandle || properties == preparebuttonchangepropsethandle || properties == adjustbuttonchangepropsethandle) {
+	if(properties == begininstancechangepropsethandle || properties == endinstancechangepropsethandle
+	      || properties == preparebuttonchangepropsethandle || properties == adjustbuttonchangepropsethandle
+				 || properties == dnpchangepropsethandle || properties == nfpchangepropsethandle || properties == paramshash1changepropsethandle
+			    || properties == paramshash2changepropsethandle || properties == paramshash3changepropsethandle) {
 		if(strcmp(property, kOfxPropChangeReason) == 0) {
 			*value = (char *) kOfxChangeUserEdited;
 			printf("Ofxwrap: in props_GetString(), asked for change reason, returned %s\n", *value);
@@ -147,6 +150,16 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 				*value = (char *) "Prepare Profile...";
 			} else if(properties == adjustbuttonchangepropsethandle) {
 				*value = (char *) "Adjust Spatial...";
+			} else if(properties == dnpchangepropsethandle) {
+				*value = (char *) "DNP";
+			} else if(properties == nfpchangepropsethandle) {
+				*value = (char *) "NFP";
+			} else if(properties == paramshash1changepropsethandle) {
+				*value = (char *) "ParamsHash1";
+			} else if(properties == paramshash2changepropsethandle) {
+				*value = (char *) "ParamsHash2";
+			} else if(properties == paramshash3changepropsethandle) {
+				*value = (char *) "ParamsHash3";
 			} else {
 				*value = (char *) "Unhandled parameter name!";
 			}

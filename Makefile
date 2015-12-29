@@ -17,7 +17,7 @@ all: ofxwrap.$(EXT)
 ofxwrap.$(EXT): ofxwrap.o Makefile
 	g++ $(LDFLAGS) ofxwrap.o -o ofxwrap.$(EXT)
 
-ofxwrap.o: ofxwrap.cpp props.h dialogs.h ifxs.h parms.h half.h halfExport.h spark.h Makefile
+ofxwrap.o: ofxwrap.cpp props.h dialogs.h ifxs.h parms.h setups.h half.h halfExport.h spark.h Makefile
 	g++ $(CFLAGS) -c ofxwrap.cpp -o ofxwrap.o
 
 spark.h: Makefile

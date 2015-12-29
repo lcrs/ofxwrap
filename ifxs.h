@@ -1,12 +1,17 @@
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
 	printf("Ofxwrap: in ifxs_getPropertySet(), effect handle is %p, prop handle is %p\n", imageEffect, propHandle);
   if(imageEffect == imageeffecthandle) {
-    printf("Ofxwrap: in ifxs_getPropertySet(), (above effect handle is the one passed thru the describe action)\n");
+    printf("Ofxwrap: in ifxs_getPropertySet(), returning describer props\n");
+		*propHandle = describerpropset;
+		return kOfxStatOK;
   }
   if(imageEffect == instancehandle) {
-    printf("Ofxwrap: in ifxs_getPropertySet(), above effect handle is the instance\n");
+    printf("Ofxwrap: in ifxs_getPropertySet(), returning instance props\n");
+		*propHandle = instancepropset;
+		return kOfxStatOK;
   }
-	return kOfxStatOK;
+	printf("Ofxwrap: in ifxs_getPropertySet(), did not handle!\n");
+	return kOfxStatFailed;
 }
 OfxStatus ifxs_getParamSet(OfxImageEffectHandle imageEffect, OfxParamSetHandle *paramSet) {
 	printf("Ofxwrap: in ifxs_getParamSet(), effect handle is %p, param set handle is %p\n", imageEffect, paramSet);

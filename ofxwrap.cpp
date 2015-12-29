@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <fcntl.h>
 #include "spark.h"
 #include "openfx/include/ofxCore.h"
 #include "openfx/include/ofxProperty.h"
@@ -14,29 +15,47 @@ OfxHost h;
 OfxPlugin *plugin = NULL;
 OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
-OfxPropertySetHandle describeincontextpropsethandle = (OfxPropertySetHandle) "describeincontextprops";
 OfxImageEffectHandle instancehandle = NULL;
+
+OfxPropertySetHandle describerpropset = (OfxPropertySetHandle) "describerpropset";
+OfxPropertySetHandle instancepropset = (OfxPropertySetHandle) "instancepropset";
+
+OfxPropertySetHandle describeincontextpropsethandle = (OfxPropertySetHandle) "describeincontextprops";
 OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
 OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
+
 OfxPropertySetHandle begininstancechangepropsethandle = (OfxPropertySetHandle) "begininstancechangeprops";
 OfxPropertySetHandle preparebuttonchangepropsethandle = (OfxPropertySetHandle) "preparebuttonchangeprops";
 OfxPropertySetHandle adjustbuttonchangepropsethandle = (OfxPropertySetHandle) "adjustbuttonchangeprops";
+OfxPropertySetHandle dnpchangepropsethandle = (OfxPropertySetHandle) "dnpchangeprops";
+OfxPropertySetHandle nfpchangepropsethandle = (OfxPropertySetHandle) "nfpchangeprops";
+OfxPropertySetHandle paramshash1changepropsethandle = (OfxPropertySetHandle) "paramshash1changeprops";
+OfxPropertySetHandle paramshash2changepropsethandle = (OfxPropertySetHandle) "paramshash2changeprops";
+OfxPropertySetHandle paramshash3changepropsethandle = (OfxPropertySetHandle) "paramshash3changeprops";
 OfxPropertySetHandle endinstancechangepropsethandle = (OfxPropertySetHandle) "endinstancechangeprops";
+
 OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
 OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
+
 OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
 OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
 OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) NULL;
-OfxPropertySetHandle temporalframeimagehandles[11];
 OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
+OfxPropertySetHandle temporalframeimagehandles[11];
+
 OfxParamSetHandle describeincontextparams = (OfxParamSetHandle) "describeincontextparams";
 OfxParamSetHandle instanceparams = (OfxParamSetHandle) "instanceparams";
+
 OfxParamHandle dnp = (OfxParamHandle) "DNP";
+char *dnp_data = NULL;
 OfxParamHandle nfp = (OfxParamHandle) "NFP";
+char *nfp_data = NULL;
 OfxParamHandle adjustspatial = (OfxParamHandle) "Adjust Spatial...";
+OfxPropertySetHandle adjustspatialprops = (OfxPropertySetHandle) "adjustspatialprops";
 OfxParamHandle paramshash1 = (OfxParamHandle) "ParamsHash1";
 OfxParamHandle paramshash2 = (OfxParamHandle) "ParamsHash2";
 OfxParamHandle paramshash3 = (OfxParamHandle) "ParamsHash3";
+int paramshash1_data, paramshash2_data, paramshash3_data = 0;
 
 void *instancedata = NULL;
 SparkPixelFormat sparkdepth;
@@ -165,6 +184,7 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 		printf("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
 		dlhandle = d;
 	} else {
+		dlclose(d);
 		dlhandle = dlopen(PLUGIN, RTLD_LAZY);
 		if(dlhandle == NULL) {
 			die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
@@ -275,6 +295,12 @@ float clamp(float d, float min, float max) {
 
 unsigned long *SparkProcess(SparkInfoStruct si) {
 	printf("Ofxwrap: in SparkProcess(), name is %s\n", si.Name);
+
+	if(dnp_data == NULL || nfp_data == NULL) {
+		printf("Ofxwrap: in SparkProcess(), DNP or NFP is null\n");
+	} else {
+		printf("Ofxwrap: in SparkProcess(), DNP %.10s, NFP %.10s, hashes %d %d %d\n", dnp_data, nfp_data, paramshash1_data, paramshash2_data, paramshash3_data);
+	}
 
 	SparkMemBufStruct result, front, temporalbuffers[11];
 	if(!bufferReady(1, &result)) return(NULL);
@@ -405,15 +431,13 @@ void SparkUnInitialise(SparkInfoStruct si) {
 	// if(instancehandle != NULL) action(kOfxActionDestroyInstance, instancehandle, NULL, NULL);
 	instancehandle = NULL;
 	instancedata = NULL;
-	free(uniquestring);
-	uniquestring = NULL;
-	free(currentframeimagehandle);
-	currentframeimagehandle = NULL;
-	free(outputimagehandle);
-	outputimagehandle = NULL;
+	free(uniquestring); uniquestring = NULL;
+	free(currentframeimagehandle); currentframeimagehandle = NULL;
+	free(outputimagehandle); outputimagehandle = NULL;
+	free(dnp_data);	dnp_data = NULL;
+	free(nfp_data);	nfp_data = NULL;
 	for(int i = 0; i < 11; i++) {
-		free(temporalframeimagehandles[i]);
-		temporalframeimagehandles[i] = NULL;
+		free(temporalframeimagehandles[i]); temporalframeimagehandles[i] = NULL;
 	}
 
 	// We can't do this because other instances of the Spark may be alive still
@@ -463,6 +487,32 @@ void SparkSetupIOEvent(SparkModuleEvent e, char *path, char *file) {
 		setups_save(path, file);
 	} else if(e == SPARK_EVENT_LOADSETUP) {
 		setups_load(path, file);
+		/* This worked for the filter page settings but not the noise profile, the change was ignored
+		action(kOfxActionBeginInstanceChanged, instancehandle, begininstancechangepropsethandle, NULL);
+		action(kOfxActionInstanceChanged, instancehandle, dnpchangepropsethandle, NULL);
+		action(kOfxActionInstanceChanged, instancehandle, nfpchangepropsethandle, NULL);
+		action(kOfxActionInstanceChanged, instancehandle, paramshash1changepropsethandle, NULL);
+		action(kOfxActionInstanceChanged, instancehandle, paramshash2changepropsethandle, NULL);
+		action(kOfxActionInstanceChanged, instancehandle, paramshash3changepropsethandle, NULL);
+		action(kOfxActionEndInstanceChanged, instancehandle, endinstancechangepropsethandle, NULL); */
+
+		// So just create a new instance, which will read the current state
+
+		// Crashes inside the plugin binary unless we do this :( Could be looking for
+		// a user prefs folder and getting confused by Flame's real/effective uid mismatch
+		int realuid = getuid();
+		int effectiveuid = geteuid();
+		setuid(realuid);
+
+		action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
+
+		instancehandle = (OfxImageEffectHandle) "instance";
+		action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
+
+		// Back to normal please
+		setuid(effectiveuid);
+
+		action(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
 	}
 }
 

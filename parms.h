@@ -42,12 +42,57 @@ OfxStatus parms_SetGetPropertySet(OfxParamSetHandle paramSet, OfxPropertySetHand
 
 OfxStatus parms_GetPropertySet(OfxParamHandle param, OfxPropertySetHandle *propHandle) {
   printf("Ofxwrap: in parms_GetPropertySet(), parm handle is %p, prop set handle is %p\n", param, propHandle);
-	return kOfxStatOK;
+  if(param == adjustspatial) {
+    printf("Ofxwrap: in parms_GetPropertySet(), returning adjustspatial props\n");
+    *propHandle = adjustspatialprops;
+    return kOfxStatOK;
+  }
+	return kOfxStatFailed;
 }
 
 OfxStatus parms_GetValue(OfxParamHandle paramHandle, ...) {
   printf("Ofxwrap: in parms_GetValue(), parm handle is %p\n", paramHandle);
-	return kOfxStatOK;
+
+  va_list ap;
+  va_start(ap, paramHandle);
+  if(paramHandle == dnp) {
+    char **s = va_arg(ap, char **);
+    printf("Ofxwrap: in parms_GetValue(), parm handle is dnp, arg is %p\n", s);
+    if(dnp_data == NULL) {
+      *s = strdup("");
+    } else {
+      *s = strdup(dnp_data);
+    }
+    return kOfxStatOK;
+  } else if(paramHandle == nfp) {
+    char **s = va_arg(ap, char **);
+    printf("Ofxwrap: in parms_GetValue(), parm handle is nfp, arg is %p\n", s);
+    if(nfp_data == NULL) {
+      *s = strdup("");
+    } else {
+      *s = strdup(nfp_data);
+    }
+    return kOfxStatOK;
+  } else if(paramHandle == paramshash1) {
+    int *s = va_arg(ap, int *);
+    printf("Ofxwrap: in parms_GetValue(), parm handle is paramshash1, arg is %p\n", s);
+    *s = paramshash1_data;
+    return kOfxStatOK;
+  } else if(paramHandle == paramshash2) {
+    int *s = va_arg(ap, int *);
+    *s = paramshash2_data;
+    return kOfxStatOK;
+    printf("Ofxwrap: in parms_GetValue(), parm handle is paramshash2, arg is %p\n", s);
+  } else if(paramHandle == paramshash3) {
+    int *s = va_arg(ap, int *);
+    *s = paramshash3_data;
+    return kOfxStatOK;
+    printf("Ofxwrap: in parms_GetValue(), parm handle is paramshash3, arg is %p\n", s);
+  } else {
+    printf("Ofxwrap: in parms_GetValue(), did not handle!\n");
+    return kOfxStatFailed;
+  }
+  va_end(ap);
 }
 
 OfxStatus parms_GetValueAtTime(OfxParamHandle paramHandle, OfxTime time, ...) {
@@ -73,17 +118,24 @@ OfxStatus parms_SetValue(OfxParamHandle paramHandle, ...) {
   if(paramHandle == dnp) {
     char *s = va_arg(ap, char *);
     printf("Ofxwrap: in parms_SetValue(), parm handle is dnp, arg is %s\n", s);
+    dnp_data = (char *) realloc(dnp_data, strlen(s));
+    strcpy(dnp_data, s);
   } else if(paramHandle == nfp) {
     char *s = va_arg(ap, char *);
     printf("Ofxwrap: in parms_SetValue(), parm handle is nfp, arg is %s\n", s);
+    nfp_data = (char *) realloc(nfp_data, strlen(s));
+    strcpy(nfp_data, s);
   } else if(paramHandle == paramshash1) {
     int s = va_arg(ap, int);
     printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash1, arg is %d\n", s);
+    paramshash1_data = s;
   } else if(paramHandle == paramshash2) {
     int s = va_arg(ap, int);
+    paramshash2_data = s;
     printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash2, arg is %d\n", s);
   } else if(paramHandle == paramshash3) {
     int s = va_arg(ap, int);
+    paramshash3_data = s;
     printf("Ofxwrap: in parms_SetValue(), parm handle is paramshash3, arg is %d\n", s);
   }
   va_end(ap);
