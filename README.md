@@ -1,5 +1,6 @@
 # Ofxwrap
 This is a crude look at running an OFX plugin inside a Spark plugin inside Flame or Smoke or Flare or Flame Assist. For now it can just about load Neat Video, open its UI, save and load its setups and process frames.
+[![Ofxwarp demo video](http://img.youtube.com/vi/tMaSOM4HAD/0.jpg)](http://www.youtube.com/watch?v=tMaSOM4HAD)
 
 ## How
 Tested with Smoke 2016.0.1 and Flame Assist 2016.2 and should work with other recent versions.
@@ -21,12 +22,13 @@ Aside from crashes, the main problem is that multiple instances of the Spark rea
 
 Setting the environment variable OFXWRAP_DEBUG will cause a huge slew of messages in the shell log which may indicate what is going wrong.  For example:
 
-```env OFXWRAP_DEBUG=1 /usr/discreet/smoke_2016.0.1.case00584709/bin/startApplication```
-
-```tail /usr/discreet/log/flame20162_shell.log```
+```
+env OFXWRAP_DEBUG=1 /usr/discreet/smoke_2016.0.1.case00584709/bin/startApplication
+tail /usr/discreet/log/smoke201601case00584709_tinface_shell.log
+```
 
 ## Innards
-This goes slightly against the grain of the OFX API by merely catching the plugin's API calls and responding to each in a targetted manner, rather than creating the set of host-side objects and properties which is pretty clearly inferred by the structure of the API.
+This goes slightly against the grain of the OFX API by merely catching the plugin's API calls and responding to each in a targeted manner, rather than creating the set of host-side objects and properties which is pretty clearly inferred by the structure of the API.
 
 Here's the rough order of operations:
 - Flame calls `SparkMemoryTempBuffers()`
@@ -68,9 +70,8 @@ Here's the rough order of operations:
   - we write our global state to disk in a file ending `_ofxsetup` next to the main Spark setup file
 - eventually Flame calls `SparkUninitialise()` when the Spark is no longer in use
   - we tidy up a ton of stuff and call `dlclose()` to unload the OFX binary
-  
+
 ### Problems
 Ideally we'd respect the intentions of the OFX API and only load the plugin once, let it describe itself once, then create multiple instances as needed.  Sadly this would be a huge amount of work because getting individual Spark nodes to talk to each other is tough - each one is loaded as a distinct shared library, so communication has to be via SHM, a file on disk or a socket.  Coordinating all the actions necessary to keep just one copy of the OFX plugin and let other nodes set and get its data structures does not really bear thinking about...
 
 As a consequence of this we probably leak quite a bit of memory, because instances can't be destroyed in the conventional way - if we try to, the plugin calls back asking us awkward questions about previous instances, the state of which we don't have access to from the current Spark's globals :(
-
