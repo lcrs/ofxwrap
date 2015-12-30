@@ -1,3 +1,8 @@
+// Implements the OFX API's Image Effect suite functions
+// Notably the ones which are called to ask for pointers to pixel buffers
+// We're just catching the ones we need to extract
+// useful info from or react to for now...
+
 OfxStatus ifxs_getPropertySet(OfxImageEffectHandle imageEffect, OfxPropertySetHandle *propHandle) {
 	say("Ofxwrap: in ifxs_getPropertySet(), effect handle is %p, prop handle is %p\n", imageEffect, propHandle);
   if(imageEffect == imageeffecthandle) {

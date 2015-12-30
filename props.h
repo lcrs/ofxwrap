@@ -1,3 +1,7 @@
+// Implements the OFX API's Property suite functions, which are used to get and set
+// practically everything by the OFX plugin.  We're just catching the ones we need to extract
+// useful info from or react to for now...
+
 // Setters
 OfxStatus props_SetPointer(OfxPropertySetHandle properties, const char *property, int index, void *value) {
 	say("Ofxwrap: in props_SetPointer(), handle is %p, property is %s, index is %d, value is %p\n", properties, property, index, value);

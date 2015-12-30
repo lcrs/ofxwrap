@@ -1,3 +1,18 @@
+// Our internal functions for keeping the OFX plugin's state on disk
+// The files are kept next to the standard Spark setup files
+// E.g. when Flame saves or loads the standard Spark setup file:
+//      /usr/discreet/project/tt/sparks/ofxwrap/Ofxwrap/smoke/ths.Ofxwrap
+// ...we then save or load the OFX parameters state to/from:
+//      /usr/discreet/project/tt/sparks/ofxwrap/Ofxwrap/smoke/ths.Ofxwrap_ofxsetup
+// The standard Spark setup file which Flame handles automatically is kinda useless
+// for us because it only stores the values of the Spark UI control globals, but
+// we have a bunch more stuff to keep track of, more than would ever fit in those
+// controls
+//
+// The format of our file is very simple, just each OFX parameter name
+// followed by =, followed by the value, followed by a line break
+
+// Add _ofxsetup to the end of the standard setup's path to get our extra setup path
 char * setups_getpath(char *path, char *file) {
   char *f = (char *) malloc(500);
   strcpy(f, path);
@@ -7,6 +22,7 @@ char * setups_getpath(char *path, char *file) {
   return f;
 }
 
+// Save current OFX parameter state from our globals to a file
 void setups_save(char *path, char *file) {
   char *p = setups_getpath(path, file);
   say("Ofxwrap: in setups_save(), going to %s\n", p);
@@ -24,6 +40,7 @@ void setups_save(char *path, char *file) {
   free(p);
 }
 
+// Retrieve OFX parameter state from a file into our globals
 void setups_load(char *path, char *file) {
   char *p = setups_getpath(path, file);
   say("Ofxwrap: in setups_load(), coming from %s\n", p);

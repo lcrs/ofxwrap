@@ -1,3 +1,5 @@
+// Implements the OFX API's Dialog suite functions, which we don't react to
+// but need to exist
 OfxStatus dialogs_RequestDialog(void *user_data) {
 	say("Ofxwrap: in dialogs_RequestDialog(), user data is %p\n", user_data);
 	return kOfxStatOK;

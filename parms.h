@@ -1,3 +1,7 @@
+// Implements the OFX API's Parameter suite functions, all about UI parameters
+// Mostly we just need to watch for the OFX plugin updating it's parameters or
+// asking for their values after we update them
+
 OfxStatus parms_Define(OfxParamSetHandle paramSet, const char *paramType, const char *name, OfxPropertySetHandle *propertySet) {
   say("Ofxwrap: in parms_Define(), parm set handle is %p, parm type is %s, name is %s, prop set handle is %p\n", paramSet, paramType, name, propertySet);
 	return kOfxStatOK;
@@ -52,7 +56,7 @@ OfxStatus parms_GetPropertySet(OfxParamHandle param, OfxPropertySetHandle *propH
 
 OfxStatus parms_GetValue(OfxParamHandle paramHandle, ...) {
   say("Ofxwrap: in parms_GetValue(), parm handle is %p\n", paramHandle);
-
+  // Return our global state for the requested OFX parameter
   va_list ap;
   va_start(ap, paramHandle);
   if(paramHandle == dnp) {
@@ -112,7 +116,7 @@ OfxStatus parms_GetIntegral(OfxParamHandle paramHandle, OfxTime time1, OfxTime t
 
 OfxStatus parms_SetValue(OfxParamHandle paramHandle, ...) {
   say("Ofxwrap: in parms_SetValue(), parm handle is %p\n", paramHandle);
-
+  // Update our global state for the indicated OFX paramter
   va_list ap;
   va_start(ap, paramHandle);
   if(paramHandle == dnp) {
