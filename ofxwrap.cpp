@@ -182,7 +182,28 @@ void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxP
 	if(plugin == NULL) {
 		die("Ofxwrap: cannot do %s, plugin has gone away!\n", a);
 	}
+
+	// Crashes inside the OFX plugin binary unless we do this, for unclear reasons.
+	// Maybe it's simply using getuid() and getpwuid() to find the home folder to store prefs in,
+	// which would return root's home folder because Flame's binary is setuid root, then failing
+	// because Flame's effective uid of a normal user doesn't let it write there.
+	// ¯\_(ツ)_/¯
+	// An alternative is to change the real uid to the normal user's uid, but that means the Flame
+	// process will forever be stuck running as that normal user and unable to switch back to root
+	// when it needs to, which seems like a bad idea... this is only a problem on OS X
+	#ifdef __APPLE__
+		int realuid = getuid();
+		int effectiveuid = geteuid();
+		setuid(realuid);
+	#endif
+
 	OfxStatus s = plugin->mainEntry(a, e, in, out);
+
+	#ifdef __APPLE__
+		// Back to normal please
+		seteuid(effectiveuid);
+	#endif
+
 	switch(s) {
 		case kOfxStatOK:
 			say("Ofxwrap: %s: ok\n", a);
@@ -219,20 +240,9 @@ int bufferReady(int id, SparkMemBufStruct *b) {
 
 // Create a new instance of the OFX plugin
 void createinstance(void) {
-	// Crashes inside the plugin binary unless we do this :( Could be looking for
-	// a user prefs folder and getting confused by Flame's real/effective uid mismatch
-	int realuid = getuid();
-	int effectiveuid = geteuid();
-	setuid(realuid);
-
 	action(kOfxImageEffectActionDescribeInContext, imageeffecthandle, describeincontextpropsethandle, NULL);
-
 	instancehandle = (OfxImageEffectHandle) "instance";
 	action(kOfxActionCreateInstance, instancehandle, NULL, NULL);
-
-	// Back to normal please
-	setuid(effectiveuid);
-
 	action(kOfxImageEffectActionGetClipPreferences, instancehandle, NULL, NULL);
 }
 
