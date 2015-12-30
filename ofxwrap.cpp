@@ -183,26 +183,23 @@ void action(const char *a, OfxImageEffectHandle e, OfxPropertySetHandle in, OfxP
 		die("Ofxwrap: cannot do %s, plugin has gone away!\n", a);
 	}
 
-	// Crashes inside the OFX plugin binary unless we do this, for unclear reasons.
+	// OS X: crashes inside the OFX plugin binary unless we do this, for unclear reasons.
 	// Maybe it's simply using getuid() and getpwuid() to find the home folder to store prefs in,
 	// which would return root's home folder because Flame's binary is setuid root, then failing
 	// because Flame's effective uid of a normal user doesn't let it write there.
+	// On Linux: Qt refuses to create QApplication unless real and effective UID are the same
 	// ¯\_(ツ)_/¯
 	// An alternative is to change the real uid to the normal user's uid, but that means the Flame
 	// process will forever be stuck running as that normal user and unable to switch back to root
-	// when it needs to, which seems like a bad idea... this is only a problem on OS X
-	#ifdef __APPLE__
-		int realuid = getuid();
-		int effectiveuid = geteuid();
-		setuid(realuid);
-	#endif
+	// when it needs to, which seems like a bad idea...
+	int realuid = getuid();
+	int effectiveuid = geteuid();
+	setuid(realuid);
 
 	OfxStatus s = plugin->mainEntry(a, e, in, out);
 
-	#ifdef __APPLE__
-		// Back to normal please
-		seteuid(effectiveuid);
-	#endif
+	// Back to normal please
+	seteuid(effectiveuid);
 
 	switch(s) {
 		case kOfxStatOK:
