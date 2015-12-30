@@ -11,7 +11,7 @@
 #include "openfx/include/ofxDialog.h"
 
 // We have a lot of global state
-// Not that even though we are a shared library, this state is unique
+// Note that even though we are a shared library, this state is unique
 // for each Spark "node" because Flame copies our binary, gives it a unique name
 // then loads that copy for each new node or timeline soft effect
 void *dlhandle = NULL;
@@ -21,17 +21,29 @@ OfxPlugin *plugin = NULL;
 // These OFX handles are all "blind" - they're just arbitrary pointers passed back and forth
 // across the API, they are never de-referenced to an actual types or memory locations
 // We're using strings purely for clarity, and NULL to indicate something's not ready
+
+// Properites of the host
 OfxPropertySetHandle hostpropsethandle = (OfxPropertySetHandle) "hostpropset";
+
+// Handle of the abstract image effect, used in the "describeincontext" action
+// This abstract instance just holds properties describing how a real
+// instance will behave, it's also referred to as the "describer" instance below
 OfxImageEffectHandle imageeffecthandle = (OfxImageEffectHandle) "imageeffect";
+
+// Handle of the actual concrete instance which is able to process pixels
 OfxImageEffectHandle instancehandle = NULL;
 
+// Propeties on the abstract describer
 OfxPropertySetHandle describerpropset = (OfxPropertySetHandle) "describerpropset";
+
+// Properties on the real working plugin instance
 OfxPropertySetHandle instancepropset = (OfxPropertySetHandle) "instancepropset";
 
+// The property sets are passed alongside action calls, to hold lists of options and return
+// values for that action essentially
 OfxPropertySetHandle describeincontextpropsethandle = (OfxPropertySetHandle) "describeincontextprops";
 OfxPropertySetHandle beginseqpropsethandle = (OfxPropertySetHandle) "beginseq";
 OfxPropertySetHandle renderpropsethandle = (OfxPropertySetHandle) "render";
-
 OfxPropertySetHandle begininstancechangepropsethandle = (OfxPropertySetHandle) "begininstancechangeprops";
 OfxPropertySetHandle preparebuttonchangepropsethandle = (OfxPropertySetHandle) "preparebuttonchangeprops";
 OfxPropertySetHandle adjustbuttonchangepropsethandle = (OfxPropertySetHandle) "adjustbuttonchangeprops";
@@ -42,18 +54,23 @@ OfxPropertySetHandle paramshash2changepropsethandle = (OfxPropertySetHandle) "pa
 OfxPropertySetHandle paramshash3changepropsethandle = (OfxPropertySetHandle) "paramshash3changeprops";
 OfxPropertySetHandle endinstancechangepropsethandle = (OfxPropertySetHandle) "endinstancechangeprops";
 
+// Input and output clip handles correspond to Front and Result Spark clips
 OfxImageClipHandle sourcecliphandle = (OfxImageClipHandle) "sourceclip";
 OfxImageClipHandle outputcliphandle = (OfxImageClipHandle) "outputclip";
-
 OfxPropertySetHandle sourceclippropsethandle = (OfxPropertySetHandle) "sourceclippropset";
 OfxPropertySetHandle outputclippropsethandle = (OfxPropertySetHandle) "outputclippropset";
+
+// Properties of source, output and 11 temporal input images
 OfxPropertySetHandle currentframeimagehandle = (OfxPropertySetHandle) NULL;
 OfxPropertySetHandle outputimagehandle = (OfxPropertySetHandle) NULL;
 OfxPropertySetHandle temporalframeimagehandles[11];
 
+// Handles for parameter sets, which are the UI controls defined by the OFX plugin,
+// both abstract at the describing stage and real live parameters of the instance
 OfxParamSetHandle describeincontextparams = (OfxParamSetHandle) "describeincontextparams";
 OfxParamSetHandle instanceparams = (OfxParamSetHandle) "instanceparams";
 
+// Parameters defined by the plugin, or the ones we're interested in at least
 OfxParamHandle dnp = (OfxParamHandle) "DNP";
 OfxParamHandle nfp = (OfxParamHandle) "NFP";
 OfxParamHandle adjustspatial = (OfxParamHandle) "Adjust Spatial...";
@@ -62,14 +79,14 @@ OfxParamHandle paramshash1 = (OfxParamHandle) "ParamsHash1";
 OfxParamHandle paramshash2 = (OfxParamHandle) "ParamsHash2";
 OfxParamHandle paramshash3 = (OfxParamHandle) "ParamsHash3";
 
-// These globals hold our copy of the OFX plugin's state
+// These globals hold our copy of the OFX plugin's parameters
 // They are updated whenever the OFX plugin feels like it and also before setups are saved
 char *dnp_data = NULL;
 char *nfp_data = NULL;
 int paramshash1_data, paramshash2_data, paramshash3_data = 0;
 
 // This pointer is malloc(d) by the OFX plugin then passed across the API
-// so it can hold its own internal state
+// to hold its own internal state
 void *instancedata = NULL;
 
 // These globals are just for our convenience, because we're often called by the OFX plugin
