@@ -277,17 +277,10 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	}
 
 	// Link the OFX plugin binary into this process
-	void *d = dlopen(plugfile, RTLD_LAZY | RTLD_NOLOAD);
-	if(d != NULL) {
-		say("Ofxwrap: plugin seems to be already loaded, will use existing handle\n");
-		dlhandle = d;
-	} else {
-		dlclose(d);
-		dlhandle = dlopen(plugfile, RTLD_LAZY);
-		if(dlhandle == NULL) {
-			die("Ofxwrap: failed to dlopen() OFX plugin!\n", NULL);
-			return 0;
-		}
+	dlhandle = dlopen(plugfile, RTLD_LAZY);
+	if(dlhandle == NULL) {
+		die("Ofxwrap: failed to dlopen() OFX plugin %s!\n", plugfile);
+		return 0;
 	}
 
 	// Find the OfxGetNumberOfPlugins symbol and call it
@@ -541,12 +534,6 @@ void SparkUnInitialise(SparkInfoStruct si) {
 	} else {
 		say("Ofxwrap: dlclose() failed! Reason: %s\n", dlerror());
 	}
-
-	void *d = dlopen(PLUGIN, RTLD_LAZY | RTLD_NOLOAD);
-	if(d != NULL) {
-		say("Ofxwrap: plugin semms to still be linked after dlclose()!\n");
-	}
-	dlclose(d);
 }
 
 // Spark entry point called when a Spark setup is saved or loaded
