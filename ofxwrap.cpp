@@ -101,8 +101,8 @@ char *uniquestring = NULL;
 int temporalids[11];
 
 // The Flame shell log will get very cluttered if the OFXWRAP_DEBUG env var is defined :)
-#define say if(debug) printf
-int debug = 0;
+#define say if(ofxdebug) printf
+int ofxdebug = 0;
 
 // Each header implements an OFX API "suite" of functions
 // More of a "header-only-library" style, they're not so much
@@ -169,7 +169,7 @@ const void *fetchSuite(OfxPropertySetHandle host, const char *suite, int version
 
 // When things fall apart
 void die(const char *format, const char *arg) {
-	char *m = (char *) malloc(100);
+	char *m = (char *) malloc(300);
 	sprintf(m, format, arg);
 	printf("%s", m);
 	sparkError(m);
@@ -246,7 +246,7 @@ void createinstance(void) {
 // Flame asks us what extra image buffers we'll want here, we register 11
 // extra buffers to use for the plugin's temporal input access
 void SparkMemoryTempBuffers(void) {
-	if(getenv("OFXWRAP_DEBUG")) debug = 1;
+	if(getenv("OFXWRAP_DEBUG")) ofxdebug = 1;
 
 	say("Ofxwrap: in SparkMemoryTempBuffers()...\n");
 	for(int i = 0; i < 11; i++) {
@@ -260,11 +260,11 @@ void SparkMemoryTempBuffers(void) {
 // Spark entry function - find the OFX plugin, ask it how it likes to be treated,
 // and create an instance of it ready to process images
 unsigned int SparkInitialise(SparkInfoStruct si) {
-	if(getenv("OFXWRAP_DEBUG")) debug = 1;
+	if(getenv("OFXWRAP_DEBUG")) ofxdebug = 1;
 
 	say("\n\n\nOfxwrap: in SparkInitialise(), name is %s\n", si.Name);
 
-	uniquestring = (char *) malloc(100);
+	uniquestring = (char *) malloc(300);
 
 	// Where it is?  We could try OFX_PLUGIN_PATH here too I guess
 	const char *plugfile = PLUGIN;

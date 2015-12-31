@@ -122,12 +122,12 @@ OfxStatus parms_SetValue(OfxParamHandle paramHandle, ...) {
   if(paramHandle == dnp) {
     char *s = va_arg(ap, char *);
     say("Ofxwrap: in parms_SetValue(), parm handle is dnp, arg is %s\n", s);
-    dnp_data = (char *) realloc(dnp_data, strlen(s));
+    dnp_data = (char *) realloc(dnp_data, strlen(s) + 1);
     strcpy(dnp_data, s);
   } else if(paramHandle == nfp) {
     char *s = va_arg(ap, char *);
     say("Ofxwrap: in parms_SetValue(), parm handle is nfp, arg is %s\n", s);
-    nfp_data = (char *) realloc(nfp_data, strlen(s));
+    nfp_data = (char *) realloc(nfp_data, strlen(s) + 1);
     strcpy(nfp_data, s);
   } else if(paramHandle == paramshash1) {
     int s = va_arg(ap, int);
