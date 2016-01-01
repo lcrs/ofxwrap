@@ -19,7 +19,7 @@ OfxHost h;
 OfxPlugin *plugin = NULL;
 
 // These OFX handles are all "blind" - they're just arbitrary pointers passed back and forth
-// across the API, they are never de-referenced to an actual types or memory locations
+// across the API, they are never de-referenced to a actual types or memory locations
 // We're using strings purely for clarity, and NULL to indicate something's not ready
 
 // Properites of the host
@@ -85,7 +85,7 @@ char *dnp_data = NULL;
 char *nfp_data = NULL;
 int paramshash1_data, paramshash2_data, paramshash3_data = 0;
 
-// This pointer is malloc(d) by the OFX plugin then passed across the API
+// This pointer is malloc()'d by the OFX plugin then passed across the API
 // to hold its own internal state
 void *instancedata = NULL;
 
@@ -105,8 +105,7 @@ int temporalids[11];
 int ofxdebug = 0;
 
 // Each header implements an OFX API "suite" of functions
-// More of a "header-only-library" style, they're not so much
-// just headers
+// In a kinda "header-only-library" style
 #include "props.h"
 #include "dialogs.h"
 #include "ifxs.h"
@@ -124,11 +123,11 @@ int ofxdebug = 0;
 	#define PLUGIN2 "/usr/discreet/sparks/neat_unpacked/NeatVideo4.ofx.bundle/Contents/Linux-x86-64/NeatVideo4.ofx"
 #endif
 
-// Spark UI callback functions forward declares
+// Spark UI callback function forward declares
 unsigned long *adjust(int what, SparkInfoStruct si);
 unsigned long *prepare(int what, SparkInfoStruct si);
 
-// Spark UI control globals, on page 1
+// Spark UI control globals
 SparkStringStruct SparkString7 = {
 	PLUGIN,
 	(char *) "%s",

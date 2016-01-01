@@ -122,6 +122,11 @@ OfxStatus props_GetString(OfxPropertySetHandle properties, const char *property,
 		return kOfxStatOK;
 	}
 	if(strcmp(property, kOfxImagePropUniqueIdentifier) == 0) {
+		// This is asking for a unique ID for the image, presumably to allow caching
+		// Most apps probably use the hash of the upstream node tree
+		// We can't really tell if the input to the Spark has changed or not, so
+		// we return a constantly incrementing number so every frame is considered
+		// unique
 		uniqueid++;
 		sprintf(uniquestring, "%ld", uniqueid);
 		*value = (char *) uniquestring;
