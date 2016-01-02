@@ -21,7 +21,7 @@ ofxwrap.o: ofxwrap.cpp props.h dialogs.h ifxs.h parms.h setups.h half.h halfExpo
 	g++ $(CFLAGS) -c ofxwrap.cpp -o ofxwrap.o
 
 spark.h: Makefile
-	ln -sf `ls /usr/discreet/presets/*/sparks/spark.h | tail -n1` spark.h
+	ln -sf `ls /usr/discreet/presets/*/sparks/spark.h | head -n1` spark.h
 
 clean:
 	rm -f ofxwrap.spark ofxwrap.spark_x86_64 ofxwrap.o spark.h
