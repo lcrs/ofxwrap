@@ -268,6 +268,11 @@ unsigned int SparkInitialise(SparkInfoStruct si) {
 	// Where it is?  We could try OFX_PLUGIN_PATH here too I guess
 	const char *plugfile = PLUGIN;
 	if(access(PLUGIN, F_OK) == -1) {
+		if(access(PLUGIN2, F_OK) == -1) {
+			die("Ofxwrap: couldn't find OFX plugin binary, is it installed?  Checked "PLUGIN" and "PLUGIN2"\n", NULL);
+			return 0;
+		}
+		// Found binary in PLUGIN2 location
 		plugfile = PLUGIN2;
 		strcpy(SparkString7.Value, PLUGIN2);
 	}
@@ -395,7 +400,6 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 4, temporalbuffers[8].Buffer);
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 5, temporalbuffers[9].Buffer);
 	sparkGetFrame(SPARK_FRONT_CLIP, sparktime + 6, temporalbuffers[10].Buffer);
-
 
 	// Make current frame input buffer to feed to the OFX plugin, big enough for an RGBA 32-bit float image
 	if(currentframeimagehandle == NULL) {
