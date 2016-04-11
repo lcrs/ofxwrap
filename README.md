@@ -21,9 +21,9 @@ Then load the Spark as usual and go wild.  It will ask for the Neat licence the 
 ## Caveats
 Aside from crashes, the main problem is that multiple instances of the Spark really don't behave.  Having multiple nodes in Batch or simultaneously using a node in Batch and a timeline soft effect will likely not work.
 
-When using the menus at the top of the Neat GUI, sometimes you have to press and release instead of clicking and dragging through the choices.
+When using the menus at the top of the Neat window, sometimes you have to press and release instead of clicking and dragging through the choices.
 
-If you full-screen the Neat UI and then close it, you're left with a black screen - hit apple-tab and you'll get back to Smoke.
+If you full-screen Neat and then close it, you're left with a black screen, but hit apple-tab and you'll be back.
 
 Setting the environment variable OFXWRAP_DEBUG will cause a huge slew of messages in the shell log which may indicate what is going wrong.  For example:
 
