@@ -367,6 +367,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		say("Ofxwrap: in SparkProcess(), DNP %.10s, NFP %.10s, hashes %d %d %d\n", dnp_data, nfp_data, paramshash1_data, paramshash2_data, paramshash3_data);
 	}
 
+	sparkViewingCursor(SPARK_CURSOR_ACTION);
+
 	// Check Spark image buffers are ready for use
 	SparkMemBufStruct result, front, temporalbuffers[11];
 	if(!bufferReady(1, &result)) return(NULL);
@@ -491,6 +493,8 @@ unsigned long *SparkProcess(SparkInfoStruct si) {
 		default:
 			die("Ofxwrap: in SparkProcess(), unhandled pixel depth!\n", NULL);
 	}
+
+	sparkViewingCursor(SPARK_CURSOR_NORMAL);
 
 	return(result.Buffer);
 }
