@@ -1,5 +1,5 @@
 # Ofxwrap
-This is a crude look at running an OFX plugin inside a Spark plugin inside Flame or Smoke or Flare or Flame Assist. For now it can just about load Neat Video, open its UI, save and load its setups and process frames.  More complicated plugins would require a bunch more work.  Lil' video link:
+This is an initial look at running an OFX plugin inside a Spark plugin inside Flame or Smoke or Flare or Flame Assist. For now it can just about load Neat Video, open its UI, save and load its setups and process frames.  More complicated plugins would require a bunch more work.  Lil' video link:
 
 [![Ofxwarp demo video](http://img.youtube.com/vi/tMaSOM4HADc/3.jpg)](http://www.youtube.com/watch?v=tMaSOM4HADc)
 
