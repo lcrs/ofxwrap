@@ -4,11 +4,13 @@ This is an initial look at running an OFX plugin inside a Spark plugin inside Fl
 [![Ofxwarp demo video](http://img.youtube.com/vi/tMaSOM4HADc/3.jpg)](http://www.youtube.com/watch?v=tMaSOM4HADc)
 
 ## How
-Tested with Smoke 2016.0.1, Smoke 2017 and Flame Assist 2016.2 and should work with other recent versions.
+Tested with Flame 2017.1.0, Smoke 2017, Smoke 2016.0.1, and Flame Assist 2016.2 and should work with other recent versions.
 
 You'll need Neat Video 4 Pro OpenFX - tested with 4.0.0 on OSX 10.10.5, 4.1.3 on OSX 10.11.6, and 4.1.1 on RHEL 6.5.
 
-The Neat binary should be in one of these places:
+Download the spark files from the releases page or here: https://github.com/lcrs/ofxwrap/releases/download/v1.0.0/ofxwrap-v1.0.0.zip. Unpack them somewhere - under /usr/discreet/sparks is traditional but not strictly necessary. 
+
+The Neat binary should be in one of these places, which is normally taken care of by the standard Neat installer:
 ```
 /Library/OFX/Plugins/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx
 /usr/discreet/sparks/neat_unpacked/NeatVideo4.ofx.bundle/Contents/MacOS/NeatVideo4.ofx
