@@ -8,7 +8,7 @@ Tested with Flame 2017.1.0, Smoke 2017, Smoke 2016.0.1, and Flame Assist 2016.2 
 
 You'll need Neat Video 4 Pro OpenFX - tested with 4.0.0 on OSX 10.10.5, 4.1.3 on OSX 10.11.6, and 4.1.1 on RHEL 6.5.
 
-Download the spark files from the releases page or here: https://github.com/lcrs/ofxwrap/releases/download/v1.0.0/ofxwrap-v1.0.0.zip. Unpack them somewhere - under /usr/discreet/sparks is traditional but not strictly necessary. 
+Download the spark files from the releases page or here: https://github.com/lcrs/ofxwrap/releases/download/v1.0.0/ofxwrap-v1.0.0.zip. Unpack them somewhere - under `/usr/discreet/sparks` is traditional but not strictly necessary. 
 
 The Neat binary should be in one of these places, which is normally taken care of by the standard Neat installer:
 ```
