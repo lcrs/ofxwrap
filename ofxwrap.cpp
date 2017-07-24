@@ -142,6 +142,12 @@ SparkPushStruct SparkPush10 = {
 	(char *) "Adjust Filter Settings",
 	adjust
 };
+SparkStringStruct SparkString12 = {
+	"NV",
+	(char *) "Rendered clip suffix: %s",
+	0,
+	NULL
+};
 
 // Called by the OFX plugin to retrieve the host's pointers to its OFX API functions
 // Each suite's functions are members of a struct defined in each header
@@ -360,6 +366,12 @@ void rgb8int_to_rgba32fp(char *in, int stride, int inc, float *out) {
 float clamp(float d, float min, float max) {
   const float t = d < min ? min : d;
   return t > max ? max : t;
+}
+
+// Called before a sequence of frames is processed, i.e. the user taps Render
+int SparkProcessStart(SparkInfoStruct si) {
+	sparkResultClipName(SparkString12.Value);
+	return 1;
 }
 
 // Spark entry point for each frame to be rendered
